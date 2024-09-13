@@ -82,6 +82,35 @@ public class Scanner
         tokens.put('\t', "ILLEGAL"); // Tab considered illegal
         tokens.put('\f', "ILLEGAL"); // Form feed considered illegal
         tokens.put('\r', "ILLEGAL"); // Carriage return considered illegal
+
+        reservedWords.put("class","CLASS");
+        reservedWords.put("extends","EXTENDS");
+        reservedWords.put("public","PUBLIC");
+        reservedWords.put("int","INT");
+        reservedWords.put("boolean","BOOLEAN");
+        reservedWords.put("static","STATIC");
+        reservedWords.put("void","VOID");
+        reservedWords.put("main","MAIN");
+        reservedWords.put("System.out.println","PRINT");
+        reservedWords.put("true","TRUE");
+        reservedWords.put("false","FALSE");
+        reservedWords.put("this","THIS");
+        reservedWords.put("new","NEW");
+        reservedWords.put("String","STRING");
+        reservedWords.put("return","RETURN");
+        reservedWords.put("if","IF");
+        reservedWords.put("while","WHILE");
+        reservedWords.put("length","LENGTH");
+        reservedWords.put("char","CHAR");
+        reservedWords.put("else","ELSE");
+        reservedWords.put("yield","YIELD");
+        reservedWords.put("for","FOR");
+        reservedWords.put("synchronized","SYNCHRONIZED");
+        reservedWords.put("float","FLOAT");
+        reservedWords.put("Xinu.print","XINUPRINT");
+        reservedWords.put("Xinu.println","XINUPRINTLN");
+        reservedWords.put("Xinu.printint","XINUPRINTINT");
+        reservedWords.put("Xinu.readint","XINUREADINT");
     }
     public String reader(java.io.Reader reader) throws java.io.IOException
     {         
