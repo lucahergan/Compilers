@@ -210,7 +210,8 @@ public class Scanner {
     }
     public static void main(String[] args) throws java.io.IOException {
         
-        PushbackReader fileReader  = new PushbackReader(new FileReader("file.java")); 
+        InputStreamReader inputStreamReader = new InputStreamReader(System.in);
+        PushbackReader fileReader = new PushbackReader(inputStreamReader);
         Scanner r = new Scanner();
         r.reader(fileReader);
         
