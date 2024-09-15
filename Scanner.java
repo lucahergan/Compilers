@@ -1,8 +1,8 @@
-import java.io.PushbackReader;
+import java.util.*;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.*;
 import java.io.FileReader;
+import java.io.PushbackReader;
 import java.io.Reader;
 import java.io.FileReader;
 
@@ -84,6 +84,13 @@ public class Scanner {
         edges[State.ERR.ordinal()][CharType.WHITESPACE.ordinal()] = State.ERR;
         edges[State.ERR.ordinal()][CharType.OTHER.ordinal()] = State.ERR;
 
+        // WHITESPACE state transitions
+        edges[State.WHITESPACE.ordinal()][CharType.LETTER.ordinal()] = State.ACCEPT;
+        edges[State.WHITESPACE.ordinal()][CharType.DIGIT.ordinal()] = State.ACCEPT;
+        edges[State.WHITESPACE.ordinal()][CharType.PUNCT.ordinal()] = State.ACCEPT;
+        edges[State.WHITESPACE.ordinal()][CharType.WHITESPACE.ordinal()] = State.WHITESPACE;
+        edges[State.WHITESPACE.ordinal()][CharType.OTHER.ordinal()] = State.ERR;
+
         // Initialize reserved words
         tokens = new HashMap<>();
         tokens.put('(',"LPAREN");
@@ -138,10 +145,6 @@ public class Scanner {
         reservedWords.put("Xinu.println","XINUPRINTLN");
         reservedWords.put("Xinu.printint","XINUPRINTINT");
         reservedWords.put("Xinu.readint","XINUREADINT");
-        reservedWords.put("&&","LOGICALAND");
-        reservedWords.put("||","LOGICALOR");
-        reservedWords.put("==","COMPARISON");
-        reservedWords.put("!=","NOTCOMPARISON");
 
         whiteSpace = new HashMap<>();
         whiteSpace.put(' ',"SPACE");
@@ -150,14 +153,11 @@ public class Scanner {
         whiteSpace.put('\f',"ILLEGAL");
         whiteSpace.put('\n',"ILLEGAL");
 
-
     }
-
 
     private boolean isPunctuation(char c) {
         return ",;(){}[]".indexOf(c) != -1;
     }
-
 
     public String reader(java.io.Reader reader) throws java.io.IOException {
         PushbackReader pbReader = new PushbackReader(reader);
@@ -188,13 +188,12 @@ public class Scanner {
         }
 
         // Handle end of file and any remaining token
-        if (tokenBuilder.length() > 0) {
+        if (tokenBuilder.length() = 0) {
             processToken(tokenBuilder.toString());
         }
 
         return ""; // Replace with actual output
     }
-
 
     private void processToken(String token) {
         if (reservedWords.containsKey(token)) {
@@ -205,12 +204,20 @@ public class Scanner {
             System.out.println("NUMBER " + token);
         } else if (Character.isLetter(token.charAt(0))) {
             System.out.println("ID " + token);
-        } else {
+        } else if (Character.isWhitespace(token.charAt(0))){
+        }
+        else {
             System.err.println("Illegal token: " + token);
         }
     }
 
     public static void main(String[] args) throws java.io.IOException {
+        
+        PushbackReader fileReader  = new PushbackReader(new FileReader("file.java")); 
+        Scanner r = new Scanner();
+        r.reader(fileReader);
+        
+        /*
         java.io.Reader reader = new java.io.StringReader("class Tester { public static void main(String[] a)" +
                                                                 "{" +
                                                                     " int x;" +
@@ -218,10 +225,6 @@ public class Scanner {
                                                                  "}");
         Scanner scanner = new Scanner();
         scanner.reader(reader);
-
-        PushbackReader fileReader  = new PushbackReader(new FileReader("file.java")); 
-        Scanner r = new Scanner();
-        r.reader(fileReader);
+        */
     }
 }
-
