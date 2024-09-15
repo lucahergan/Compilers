@@ -5,6 +5,7 @@ import java.util.Map;
 public class Scanner {
     Map<String, String> reservedWords;
     Map<Character, String> tokens;
+    Map<Character, String> whiteSpace;
 
     public enum State {
         START, ID, NUM, PUNCT, WHITESPACE, ACCEPT, ERR
@@ -81,28 +82,28 @@ public class Scanner {
 
         // Initialize reserved words
         tokens = new HashMap<>();
-        tokens.put("(","LPAREN");
-        tokens.put(")","RPAREN");
-        tokens.put("{","LBRACE");
-        tokens.put("}","RBRACE");
-        tokens.put(",","COMMA");
-        tokens.put(";","SEMI");
-        tokens.put("*","STAR");
-        tokens.put("!","BANG");
-        tokens.put("[","LSQUARE");
-        tokens.put("]","RSQUARE");
-        tokens.put(".","PERIOD");
-        tokens.put("=","ASSIGN");
-        tokens.put("/","DIVISION");
-        tokens.put("+","PLUS");
-        tokens.put("-","MINUS");
+        tokens.put('(',"LPAREN");
+        tokens.put(')',"RPAREN");
+        tokens.put('{',"LBRACE");
+        tokens.put('}',"RBRACE");
+        tokens.put(',',"COMMA");
+        tokens.put(';',"SEMI");
+        tokens.put('*',"STAR");
+        tokens.put('!',"BANG");
+        tokens.put('[',"LSQUARE");
+        tokens.put(']',"RSQUARE");
+        tokens.put('.',"PERIOD");
+        tokens.put('=',"ASSIGN");
+        tokens.put('/',"DIVISION");
+        tokens.put('+',"PLUS");
+        tokens.put('-',"MINUS");
         tokens.put('"',"STRING_LITERAL(");
-        tokens.put("&","BWAND");
-        tokens.put("|","BWOR");
-        tokens.put("^","XOR");
-        tokens.put("~","COMP");
-        tokens.put("<","LESSTHAN");
-        tokens.put(">","GREATERTHAN");
+        tokens.put('&',"BWAND");
+        tokens.put('|',"BWOR");
+        tokens.put('^',"XOR");
+        tokens.put('~',"COMP");
+        tokens.put('<',"LESSTHAN");
+        tokens.put('>',"GREATERTHAN");
 
         reservedWords = new HashMap<>();
         reservedWords.put("class","CLASS");
@@ -139,11 +140,12 @@ public class Scanner {
         reservedWords.put("!=","NOTCOMPARISON");
 
         whiteSpace = new HashMap<>();
-        whiteSpace.put(" ","SPACE");
-        whiteSpace.put("\t","ILLEGAL");
-        whiteSpace.put("\r","ILLEGAL");
-        whiteSpace.put("\f","ILLEGAL");
-        whiteSpace.put("\n","ILLEGAL");
+        whiteSpace.put(' ',"SPACE");
+        whiteSpace.put('\t',"ILLEGAL");
+        whiteSpace.put('\r',"ILLEGAL");
+        whiteSpace.put('\f',"ILLEGAL");
+        whiteSpace.put('\n',"ILLEGAL");
+
 
     }
 
