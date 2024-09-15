@@ -135,7 +135,7 @@ public class Scanner {
         reservedWords.put("Xinu.readint","XINUREADINT");
 
         whiteSpace = new HashMap<>();
-        whiteSpace.put(" ","ILLEGAL");
+        whiteSpace.put(" ","SPACE");
         whiteSpace.put("\t","ILLEGAL");
         whiteSpace.put("\r","ILLEGAL");
         whiteSpace.put("\f","ILLEGAL");
