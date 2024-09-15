@@ -133,6 +133,10 @@ public class Scanner {
         reservedWords.put("Xinu.println","XINUPRINTLN");
         reservedWords.put("Xinu.printint","XINUPRINTINT");
         reservedWords.put("Xinu.readint","XINUREADINT");
+        reservedWords.put("&&","LOGICALAND");
+        reservedWords.put("||","LOGICALOR");
+        reservedWords.put("==","COMPARISON");
+        reservedWords.put("!=","NOTCOMPARISON");
 
         whiteSpace = new HashMap<>();
         whiteSpace.put(" ","SPACE");
