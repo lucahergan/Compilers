@@ -219,7 +219,7 @@ public class Scanner {
         Scanner scanner = new Scanner();
         scanner.reader(reader);
 
-        PushbackReader fileReader  = new PushbackReader(new FileReader("txtFile.txt")); 
+        PushbackReader fileReader  = new PushbackReader(new FileReader("file.java")); 
         Scanner r = new Scanner();
         r.reader(fileReader);
     }
