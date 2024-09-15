@@ -1,6 +1,10 @@
 import java.io.PushbackReader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.*;
+import java.io.FileReader;
+import java.io.Reader;
+import java.io.FileReader;
 
 public class Scanner {
     Map<String, String> reservedWords;
@@ -214,6 +218,10 @@ public class Scanner {
                                                                  "}");
         Scanner scanner = new Scanner();
         scanner.reader(reader);
+
+        PushbackReader fileReader  = new PushbackReader(new FileReader("txtFile.txt")); 
+        Scanner r = new Scanner();
+        r.reader(fileReader);
     }
 }
 
