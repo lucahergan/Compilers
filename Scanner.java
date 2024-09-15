@@ -198,7 +198,10 @@ public class Scanner {
     private void processToken(String token) {
         if (reservedWords.containsKey(token)) {
             System.out.println(reservedWords.get(token) + " " + token);
-        } else if (tokens.containsKey(token.charAt(0))) {
+        } else if (Character.isPunctuation(token.charAt(0))){
+            System.out.println(tokens.get(token.charAt(0)) + " " + token);
+        } 
+        else if (tokens.containsKey(token.charAt(0))) {
             System.out.println(tokens.get(token.charAt(0)) + " " + token);
         } else if (Character.isDigit(token.charAt(0))) {
             System.out.println("NUMBER " + token);
