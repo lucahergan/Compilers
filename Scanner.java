@@ -156,7 +156,7 @@ public class Scanner {
     }
 
     private boolean isPunctuation(char c) {
-        return ",;(){}[]".indexOf(c) != -1;
+        return ",;(){}[]&*-+=./".indexOf(c) != -1;
     }
 
     public String reader(java.io.Reader reader) throws java.io.IOException {
