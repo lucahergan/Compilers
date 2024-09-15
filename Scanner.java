@@ -197,23 +197,17 @@ public class Scanner {
 
     private void processToken(String token) {
         if (reservedWords.containsKey(token)) {
-            System.out.println(reservedWords.get(token) + " " + token);
-        } else if (Character.isPunctuation(token.charAt(0))){
-            System.out.println(tokens.get(token.charAt(0)) + " " + token);
-        } 
-        else if (tokens.containsKey(token.charAt(0))) {
-            System.out.println(tokens.get(token.charAt(0)) + " " + token);
+            System.out.print(reservedWords.get(token) + " ");
+        } else if (tokens.containsKey(token.charAt(0))) {
+            System.out.println(tokens.get(token.charAt(0)));
         } else if (Character.isDigit(token.charAt(0))) {
             System.out.println("NUMBER " + token);
         } else if (Character.isLetter(token.charAt(0))) {
-            System.out.println("ID " + token);
-        } else if (Character.isWhitespace(token.charAt(0))){
-        }
-        else {
+            System.out.print("ID(" + token+") ");
+        } else {
             System.err.println("Illegal token: " + token);
         }
     }
-
     public static void main(String[] args) throws java.io.IOException {
         
         PushbackReader fileReader  = new PushbackReader(new FileReader("file.java")); 
