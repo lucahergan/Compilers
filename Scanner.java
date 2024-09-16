@@ -188,7 +188,7 @@ public class Scanner {
         }
 
         // Handle end of file and any remaining token
-        if (tokenBuilder.length() = 0) {
+        if (tokenBuilder.length() > 0) {
             processToken(tokenBuilder.toString());
         }
 
