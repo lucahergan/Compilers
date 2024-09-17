@@ -171,6 +171,10 @@ public class Scanner {
 
         while ((nextChar = pbReader.read()) != -1) {
             char c = (char) nextChar;
+            if(c == '"'){
+                strgLiteralHelper(pbReader);
+                c =(char) pbReader.read();
+            }
             CharType type = characterClass[c];
             State nextState = edges[currentState.ordinal()][type.ordinal()];
 
@@ -205,6 +209,21 @@ public class Scanner {
         strg.append(nextChar);
         reader.unread(nextChar);
         return strg;
+    }
+    private void strgLiteralHelper(PushbackReader reader) throws IOException{
+        StringBuilder stgLit = new StringBuilder();
+        char nextChar = (char) reader.read();
+        while(nextChar != '"') {
+
+            if(nextChar >255 || nextChar <0){
+                System.out.print("STRING_LITERAL("+stgLit+") ");
+                System.err.println("NEVER ENDING STRING LITERAL");
+            }
+            stgLit.append(nextChar);
+            nextChar = (char) reader.read();
+        }
+        System.out.print("STRING_LITERAL("+stgLit+") ");
+
     }
     private boolean punctTwo(PushbackReader reader, CharType current, char curChar) throws IOException {
         try {
