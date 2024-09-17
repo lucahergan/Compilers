@@ -1,0 +1,20 @@
+public static boolean isOctal(String input) {
+        // Check if input is null or doesn't start with "0" or is too short
+        if (input == null || !input.startsWith("0") || input.length() <= 1) {
+            return false;
+        }
+
+        // Extract the part of the string after "0"
+        String octalPart = input.substring(1);
+
+        // Check if all characters in the remaining part are octal digits
+        for (int i = 0; i < octalPart.length(); i++) {
+            char c = octalPart.charAt(i);
+            // Combined check for octal digits (0-7)
+            if (!(c >= '0' && c <= '7')) {
+                return false;
+            }
+        }
+
+        return true;
+    }
