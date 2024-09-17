@@ -1,0 +1,17 @@
+public static boolean isHexadecimal(String input) {
+        // Check if input is null or doesn't start with "0x" or is too short
+        if (input == null || !input.startsWith("0x") || input.length() <= 2) {
+            return false;
+        }
+
+        // Extract the part of the string after "0x"
+        String hexPart = input.substring(2);
+
+        // Check if all characters in the remaining part are hexadecimal digits
+        for (int i = 0; i < hexPart.length(); i++) {
+            char c = hexPart.charAt(i);
+            // Combined check for hexadecimal digits
+            if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f'))) {
+                return false;
+            }
+        }
