@@ -174,6 +174,9 @@ public class Scanner {
                 case ACCEPT:
                     processToken(tokenBuilder.toString());
                     tokenBuilder.setLength(0);
+                    if(type != CharType.WHITESPACE){
+                        pbReader.unread(c);
+                    }
                     currentState = State.START;
                     break;
                 case ERR:
