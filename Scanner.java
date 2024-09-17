@@ -182,10 +182,51 @@ public class Scanner {
                     break;
                 default:
                     tokenBuilder.append(c);
+                     if(punctTwo(pbReader,type,c)){
+                        tokenBuilder = punctHelper(pbReader,tokenBuilder);
+                        pbReader.read(); //skips next
+                    }
                     currentState = nextState;
                     break;
             }
         }
+
+
+            private StringBuilder punctHelper(PushbackReader reader, StringBuilder strg) throws IOException {
+
+        char nextChar = (char)reader.read();
+        strg.append(nextChar);
+        reader.unread(nextChar);
+        return strg;
+    }
+    private boolean punctTwo(PushbackReader reader, CharType current, char curChar) throws IOException {
+        try {
+            char nextChar;
+            nextChar = (char) reader.read();
+            StringBuilder strg = new StringBuilder();
+            strg.append(curChar);
+            strg.append(nextChar);
+            if((int) nextChar >255 || (int)nextChar <0) {
+                return false;
+            }
+            CharType nextCharType = characterClass[nextChar];
+
+            if (nextCharType == CharType.PUNCT){
+             //   System.out.println("a");
+                if(current == CharType.PUNCT){
+                   // System.out.println("b and the strg: '" +strg+"'");
+                    if(reservedWords.containsKey(strg.toString())) {
+             //           System.out.println("c");
+                        reader.unread(nextChar);
+                        return true;
+            }}}
+            reader.unread(nextChar);
+        } catch (IOException e) {
+            return false;
+        }
+
+        return false;
+    }
 
         // Handle end of file and any remaining token
         if (tokenBuilder.length() > 0) {
