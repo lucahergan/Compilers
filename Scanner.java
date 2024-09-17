@@ -145,6 +145,10 @@ public class Scanner {
         reservedWords.put("Xinu.println","XINUPRINTLN");
         reservedWords.put("Xinu.printint","XINUPRINTINT");
         reservedWords.put("Xinu.readint","XINUREADINT");
+        reservedWords.put("&&", "AND");
+        reservedWords.put("!=","NOT");
+        reservedWords.put("||","OR");
+        reservedWords.put("==","EQUALS");
 
         whiteSpace = new HashMap<>();
         whiteSpace.put(' ',"SPACE");
