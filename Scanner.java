@@ -150,7 +150,7 @@ public class Scanner {
         reservedWords.put("&&", "AND");
         reservedWords.put("!=","NOTEQUAL");
         reservedWords.put("||","OR");
-        reservedWords.put("==","EQUALS");
+        reservedWords.put("==","EQUAL");
 
         whiteSpace = new HashMap<>();
         whiteSpace.put(' ',"SPACE");
