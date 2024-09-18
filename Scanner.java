@@ -48,7 +48,7 @@ public class Scanner {
         edges[State.START.ordinal()][CharType.LETTER.ordinal()] = State.ID;
         edges[State.START.ordinal()][CharType.DIGIT.ordinal()] = State.NUM;
         edges[State.START.ordinal()][CharType.PUNCT.ordinal()] = State.PUNCT;
-        edges[State.START.ordinal()][CharType.WHITESPACE.ordinal()] = State.START;
+        edges[State.START.ordinal()][CharType.WHITESPACE.ordinal()] = State.WHITESPACE;
         edges[State.START.ordinal()][CharType.OTHER.ordinal()] = State.ERR;
 
         // ID state transitions
@@ -90,7 +90,7 @@ public class Scanner {
         edges[State.WHITESPACE.ordinal()][CharType.LETTER.ordinal()] = State.ACCEPT;
         edges[State.WHITESPACE.ordinal()][CharType.DIGIT.ordinal()] = State.ACCEPT;
         edges[State.WHITESPACE.ordinal()][CharType.PUNCT.ordinal()] = State.ACCEPT;
-        edges[State.WHITESPACE.ordinal()][CharType.WHITESPACE.ordinal()] = State.WHITESPACE;
+        edges[State.WHITESPACE.ordinal()][CharType.WHITESPACE.ordinal()] = State.START;
         edges[State.WHITESPACE.ordinal()][CharType.OTHER.ordinal()] = State.ERR;
 
         // Initialize reserved words
@@ -107,10 +107,10 @@ public class Scanner {
         tokens.put(']',"RSQUARE");
         tokens.put('.',"PERIOD");
         tokens.put('=',"ASSIGN");
-        tokens.put('/',"DIVISION");
+        tokens.put('/',"FORDWARDSLASH");
         tokens.put('+',"PLUS");
         tokens.put('-',"MINUS");
-        tokens.put('"',"STRING_LITERAL(");
+        tokens.put('"',"QUOTE");
         tokens.put('&',"BWAND");
         tokens.put('|',"BWOR");
         tokens.put('^',"XOR");
@@ -143,14 +143,14 @@ public class Scanner {
         reservedWords.put("for","FOR");
         reservedWords.put("synchronized","SYNCHRONIZED");
         reservedWords.put("float","FLOAT");
-        reservedWords.put("Xinu.print","XINUPRINT");
-        reservedWords.put("Xinu.println","XINUPRINTLN");
-        reservedWords.put("Xinu.printint","XINUPRINTINT");
-        reservedWords.put("Xinu.readint","XINUREADINT");
+        reservedWords.put("Xinu.print","PRINT");
+        reservedWords.put("Xinu.println","PRINTLN");
+        reservedWords.put("Xinu.printint","PRINTINT");
+        reservedWords.put("Xinu.readint","READINT");
         reservedWords.put("&&", "AND");
-        reservedWords.put("!=","NOT");
+        reservedWords.put("!=","NOTEQUAL");
         reservedWords.put("||","OR");
-        reservedWords.put("==","EQUALS");
+        reservedWords.put("==","EQUAL");
 
         whiteSpace = new HashMap<>();
         whiteSpace.put(' ',"SPACE");
@@ -162,7 +162,7 @@ public class Scanner {
     }
 
     private boolean isPunctuation(char c) {
-        return ",;(){}[]&*-+=./".indexOf(c) != -1;
+        return "\"^~|&!,;(){}[]&*-+=./><".indexOf(c) != -1;
     }
 
     public String reader(java.io.Reader reader) throws java.io.IOException {
@@ -170,52 +170,39 @@ public class Scanner {
         State currentState = State.START;
         int nextChar;
         StringBuilder tokenBuilder = new StringBuilder();
-        int prevChar;
-        boolean multiLineDetect = false;
-        boolean endOfMultiLine = false;
+
         while ((nextChar = pbReader.read()) != -1) {
             char c = (char) nextChar;
             if(c == '/'){
                 nextChar = pbReader.read();
                 c = (char) nextChar;
-                if(c  == '/'){ //
-                    //System.out.println("RIGHT");
+                if(c != '/' && c != '*'){
                     nextChar = pbReader.read();
-                    c = (char) nextChar;
+                    //System.out.println("FORWARDSLASH");
+                    break;
+                }
+                else if(c  == '/'){ //
+                    //System.out.println("RIGHT");
                     while((nextChar = pbReader.read()) != -1){
-                        c = (char) nextChar;
                         if(c == '\r' || c == '\n'){
+                            c = (char)nextChar;
                             break;
                         }
+                        else{c = (char)nextChar;}
                     }
                 }else if(c == '*'){
-                    nextChar = pbReader.read();
-                    c = (char) nextChar;
-                    prevChar = nextChar;
                     while((nextChar = pbReader.read()) != -1){
-                        c = (char)nextChar;
-                        char prev = (char)prevChar;
-                        if(prev == '*' && c == '/'){
-                            endOfMultiLine = true;
+                        if((char)nextChar == '*' && (char)pbReader.read() == '/'){
+                            c = (char)pbReader.read();
                             break;
-                        } 
+                        }
+                        else{
+                            c = (char)nextChar;
+                        }
                     }
-                    //if(endOfMultiLine == false){
-                      //  currentState = State.ERR; 
-                    //}
-                    
-                } else{
-                    pbReader.unread(nextChar);
                 }
             }
-            if(c == '.'){
-                tokenBuilder.append(c);
-                c = (char) pbReader.read();
-            }
-            /*if(c == '"'){
-                strgLiteralHelper(pbReader);
-                c =(char) pbReader.read();
-            }*/
+            
             CharType type = characterClass[c];
             State nextState = edges[currentState.ordinal()][type.ordinal()];
 
@@ -229,13 +216,14 @@ public class Scanner {
                     currentState = State.START;
                     break;
                 case ERR:
-                    //if((multiLineDetect == true )&& (endOfMultiLine == false)){
-                      //  System.err.println("");
-                        //currentState = State.ERR;
-                    //}else{
-                       System.err.println("Illegal token.");
-                       currentState = State.ERR; 
-                    //}
+                    if(type == CharType.WHITESPACE){
+                        currentState = State.START;
+                        break;
+                    }
+                    else{
+                    System.err.println("Illegal token.");
+                    currentState = State.ERR;
+                    }
                     break;
                 default:
                     tokenBuilder.append(c);
@@ -262,10 +250,10 @@ public class Scanner {
             nextChar = (char) reader.read();
             StringBuilder strg = new StringBuilder();
             strg.append(curChar);
-            strg.append(nextChar);
             if((int) nextChar >255 || (int)nextChar <0) {
                 return false;
             }
+            strg.append(nextChar);
             CharType nextCharType = characterClass[nextChar];
 
             if (nextCharType == CharType.PUNCT){
@@ -285,22 +273,6 @@ public class Scanner {
         return false;
     }
 
-        private void strgLiteralHelper(PushbackReader reader) throws IOException{
-        StringBuilder stgLit = new StringBuilder();
-        char nextChar = (char) reader.read();
-        while(nextChar != '"') {
-
-            if(nextChar >255 || nextChar <0){
-                System.out.print("STRING_LITERAL("+stgLit+") ");
-                System.err.println("NEVER ENDING STRING LITERAL");
-            }
-            stgLit.append(nextChar);
-            nextChar = (char) reader.read();
-        }
-        System.out.print("STRING_LITERAL("+stgLit+") ");
-
-    }
-
     private StringBuilder punctHelper(PushbackReader reader, StringBuilder strg) throws IOException {
 
         char nextChar = (char)reader.read();
@@ -311,15 +283,15 @@ public class Scanner {
 
     private void processToken(String token) {
         if (reservedWords.containsKey(token)) {
-            System.out.println(reservedWords.get(token) + " ");
+            System.out.println(reservedWords.get(token));
         } else if (tokens.containsKey(token.charAt(0))) {
             System.out.println(tokens.get(token.charAt(0)));
         } else if (Character.isDigit(token.charAt(0))) {
-            System.out.println("NUMBER " + token);
+            System.out.println("INTEGER_LITERAL(" + token + ")");
         } else if (Character.isLetter(token.charAt(0))) {
             System.out.println("ID(" + token+") ");
         } else {
-            //System.err.println("Illegal token.");
+            //System.err.println("Illegal token: " + token);
         }
     }
     public static void main(String[] args) throws java.io.IOException {
@@ -329,14 +301,5 @@ public class Scanner {
         Scanner r = new Scanner();
         r.reader(fileReader);
         System.out.println("EOF");
-        /*
-        java.io.Reader reader = new java.io.StringReader("class Tester { public static void main(String[] a)" +
-                                                                "{" +
-                                                                    " int x;" +
-                                                                    "} " +
-                                                                 "}");
-        Scanner scanner = new Scanner();
-        scanner.reader(reader);
-        */
     }
 }
