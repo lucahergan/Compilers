@@ -162,7 +162,7 @@ public class Scanner {
     }
 
     private boolean isPunctuation(char c) {
-        return "^~|&!,;(){}[]&*-+=./><".indexOf(c) != -1;
+        return "\"^~|&!,;(){}[]&*-+=./><".indexOf(c) != -1;
     }
 
     public String reader(java.io.Reader reader) throws java.io.IOException {
@@ -206,10 +206,7 @@ public class Scanner {
                 tokenBuilder.append(c);
                 c = (char) pbReader.read();
             }
-            /*if(c == '"'){
-                strgLiteralHelper(pbReader);
-                c =(char) pbReader.read();
-            }*/
+
             CharType type = characterClass[c];
             State nextState = edges[currentState.ordinal()][type.ordinal()];
 
@@ -276,22 +273,6 @@ public class Scanner {
         }
 
         return false;
-    }
-
-        private void strgLiteralHelper(PushbackReader reader) throws IOException{
-        StringBuilder stgLit = new StringBuilder();
-        char nextChar = (char) reader.read();
-        while(nextChar != '"') {
-
-            if(nextChar >255 || nextChar <0){
-                System.out.print("STRING_LITERAL("+stgLit+") ");
-                System.err.println("NEVER ENDING STRING LITERAL");
-            }
-            stgLit.append(nextChar);
-            nextChar = (char) reader.read();
-        }
-        System.out.print("STRING_LITERAL("+stgLit+") ");
-
     }
 
     private StringBuilder punctHelper(PushbackReader reader, StringBuilder strg) throws IOException {
