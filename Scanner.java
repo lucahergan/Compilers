@@ -170,17 +170,45 @@ public class Scanner {
         State currentState = State.START;
         int nextChar;
         StringBuilder tokenBuilder = new StringBuilder();
+        int prevChar;
 
         while ((nextChar = pbReader.read()) != -1) {
             char c = (char) nextChar;
+            if(c == '/'){
+                nextChar = pbReader.read();
+                c = (char) nextChar;
+                if(c  == '/'){ //
+                    //System.out.println("RIGHT");
+                    nextChar = pbReader.read();
+                    c = (char) nextChar;
+                    while((nextChar = pbReader.read()) != -1){
+                        c = (char) nextChar;
+                        if(c == '\r' || c == '\n'){
+                            break;
+                        }
+                    }
+                }if(c == '*'){
+                    nextChar = pbReader.read();
+                    c = (char) nextChar;
+                    prevChar = nextChar;
+                    while((nextChar = pbReader.read()) != -1){
+                        c = (char)nextChar;
+                        char prev = (char)prevChar;
+                        if(prev == '*' && c == '/'){
+                            break;
+                        } 
+                    }
+
+                }
+            }
             if(c == '.'){
                 tokenBuilder.append(c);
                 c = (char) pbReader.read();
             }
-            if(c == '"'){
+            /*if(c == '"'){
                 strgLiteralHelper(pbReader);
                 c =(char) pbReader.read();
-            }
+            }*/
             CharType type = characterClass[c];
             State nextState = edges[currentState.ordinal()][type.ordinal()];
 
@@ -251,9 +279,8 @@ public class Scanner {
         while(nextChar != '"') {
 
             if(nextChar >255 || nextChar <0){
-                //System.out.print("STRING_LITERAL("+stgLit+") ");
+                System.out.print("STRING_LITERAL("+stgLit+") ");
                 System.err.println("NEVER ENDING STRING LITERAL");
-                System.exit(0);
             }
             stgLit.append(nextChar);
             nextChar = (char) reader.read();
@@ -272,15 +299,15 @@ public class Scanner {
 
     private void processToken(String token) {
         if (reservedWords.containsKey(token)) {
-            System.out.print(reservedWords.get(token) + " ");
+            System.out.println(reservedWords.get(token) + " ");
         } else if (tokens.containsKey(token.charAt(0))) {
             System.out.println(tokens.get(token.charAt(0)));
         } else if (Character.isDigit(token.charAt(0))) {
             System.out.println("NUMBER " + token);
         } else if (Character.isLetter(token.charAt(0))) {
-            System.out.print("ID(" + token+") ");
+            System.out.println("ID(" + token+") ");
         } else {
-            System.err.println("Illegal token: " + token);
+            //System.err.println("Illegal token: " + token);
         }
     }
     public static void main(String[] args) throws java.io.IOException {
@@ -289,7 +316,7 @@ public class Scanner {
         PushbackReader fileReader = new PushbackReader(inputStreamReader);
         Scanner r = new Scanner();
         r.reader(fileReader);
-        
+        System.out.println("EOF");
         /*
         java.io.Reader reader = new java.io.StringReader("class Tester { public static void main(String[] a)" +
                                                                 "{" +
