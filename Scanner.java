@@ -251,8 +251,9 @@ public class Scanner {
         while(nextChar != '"') {
 
             if(nextChar >255 || nextChar <0){
-                System.out.print("STRING_LITERAL("+stgLit+") ");
+                //System.out.print("STRING_LITERAL("+stgLit+") ");
                 System.err.println("NEVER ENDING STRING LITERAL");
+                System.exit(0);
             }
             stgLit.append(nextChar);
             nextChar = (char) reader.read();
