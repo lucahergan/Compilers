@@ -100,7 +100,7 @@ public class Scanner {
         tokens.put('{',"LBRACE");
         tokens.put('}',"RBRACE");
         tokens.put(',',"COMMA");
-        tokens.put(';',"SEMI");
+        tokens.put(';',"SEMICOLON");
         tokens.put('*',"STAR");
         tokens.put('!',"BANG");
         tokens.put('[',"LSQUARE");
@@ -171,7 +171,8 @@ public class Scanner {
         int nextChar;
         StringBuilder tokenBuilder = new StringBuilder();
         int prevChar;
-
+        boolean multiLineDetect = false;
+        boolean endOfMultiLine = false;
         while ((nextChar = pbReader.read()) != -1) {
             char c = (char) nextChar;
             if(c == '/'){
@@ -187,7 +188,7 @@ public class Scanner {
                             break;
                         }
                     }
-                }if(c == '*'){
+                }else if(c == '*'){
                     nextChar = pbReader.read();
                     c = (char) nextChar;
                     prevChar = nextChar;
@@ -195,10 +196,16 @@ public class Scanner {
                         c = (char)nextChar;
                         char prev = (char)prevChar;
                         if(prev == '*' && c == '/'){
+                            endOfMultiLine = true;
                             break;
                         } 
                     }
-
+                    //if(endOfMultiLine == false){
+                      //  currentState = State.ERR; 
+                    //}
+                    
+                } else{
+                    pbReader.unread(nextChar);
                 }
             }
             if(c == '.'){
@@ -222,8 +229,13 @@ public class Scanner {
                     currentState = State.START;
                     break;
                 case ERR:
-                    System.err.println("Illegal token: " + c);
-                    currentState = State.ERR;
+                    //if((multiLineDetect == true )&& (endOfMultiLine == false)){
+                      //  System.err.println("");
+                        //currentState = State.ERR;
+                    //}else{
+                       System.err.println("Illegal token.");
+                       currentState = State.ERR; 
+                    //}
                     break;
                 default:
                     tokenBuilder.append(c);
@@ -307,7 +319,7 @@ public class Scanner {
         } else if (Character.isLetter(token.charAt(0))) {
             System.out.println("ID(" + token+") ");
         } else {
-            //System.err.println("Illegal token: " + token);
+            //System.err.println("Illegal token.");
         }
     }
     public static void main(String[] args) throws java.io.IOException {
