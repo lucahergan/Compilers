@@ -48,7 +48,7 @@ public class Scanner {
         edges[State.START.ordinal()][CharType.LETTER.ordinal()] = State.ID;
         edges[State.START.ordinal()][CharType.DIGIT.ordinal()] = State.NUM;
         edges[State.START.ordinal()][CharType.PUNCT.ordinal()] = State.PUNCT;
-        edges[State.START.ordinal()][CharType.WHITESPACE.ordinal()] = State.START;
+        edges[State.START.ordinal()][CharType.WHITESPACE.ordinal()] = State.WHITESPACE;
         edges[State.START.ordinal()][CharType.OTHER.ordinal()] = State.ERR;
 
         // ID state transitions
@@ -110,7 +110,7 @@ public class Scanner {
         tokens.put('/',"FORDWARDSLASH");
         tokens.put('+',"PLUS");
         tokens.put('-',"MINUS");
-        tokens.put('"',"STRING_LITERAL(");
+        tokens.put('"',"QUOTE");
         tokens.put('&',"BWAND");
         tokens.put('|',"BWOR");
         tokens.put('^',"XOR");
@@ -201,11 +201,7 @@ public class Scanner {
                     }
                 }
             }
-            if(c == '.'){
-                tokenBuilder.append(c);
-                c = (char) pbReader.read();
-            }
-
+            
             CharType type = characterClass[c];
             State nextState = edges[currentState.ordinal()][type.ordinal()];
 
@@ -223,8 +219,10 @@ public class Scanner {
                         currentState = State.START;
                         break;
                     }
+                    else{
                     System.err.println("Illegal token: " + c);
                     currentState = State.ERR;
+                    }
                     break;
                 default:
                     tokenBuilder.append(c);
