@@ -5,6 +5,8 @@ import java.io.FileReader;
 import java.io.PushbackReader;
 import java.io.Reader;
 import java.io.FileReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
 
 public class Scanner {
     Map<String, String> reservedWords;
@@ -202,30 +204,15 @@ public class Scanner {
             }
         }
 
-
-            private StringBuilder punctHelper(PushbackReader reader, StringBuilder strg) throws IOException {
-
-        char nextChar = (char)reader.read();
-        strg.append(nextChar);
-        reader.unread(nextChar);
-        return strg;
-    }
-    private void strgLiteralHelper(PushbackReader reader) throws IOException{
-        StringBuilder stgLit = new StringBuilder();
-        char nextChar = (char) reader.read();
-        while(nextChar != '"') {
-
-            if(nextChar >255 || nextChar <0){
-                System.out.print("STRING_LITERAL("+stgLit+") ");
-                System.err.println("NEVER ENDING STRING LITERAL");
-            }
-            stgLit.append(nextChar);
-            nextChar = (char) reader.read();
+        // Handle end of file and any remaining token
+        if (tokenBuilder.length() > 0) {
+            processToken(tokenBuilder.toString());
         }
-        System.out.print("STRING_LITERAL("+stgLit+") ");
 
+        return ""; // Replace with actual output
     }
-    private boolean punctTwo(PushbackReader reader, CharType current, char curChar) throws IOException {
+
+        private boolean punctTwo(PushbackReader reader, CharType current, char curChar) throws IOException {
         try {
             char nextChar;
             nextChar = (char) reader.read();
@@ -254,12 +241,28 @@ public class Scanner {
         return false;
     }
 
-        // Handle end of file and any remaining token
-        if (tokenBuilder.length() > 0) {
-            processToken(tokenBuilder.toString());
-        }
+        private void strgLiteralHelper(PushbackReader reader) throws IOException{
+        StringBuilder stgLit = new StringBuilder();
+        char nextChar = (char) reader.read();
+        while(nextChar != '"') {
 
-        return ""; // Replace with actual output
+            if(nextChar >255 || nextChar <0){
+                System.out.print("STRING_LITERAL("+stgLit+") ");
+                System.err.println("NEVER ENDING STRING LITERAL");
+            }
+            stgLit.append(nextChar);
+            nextChar = (char) reader.read();
+        }
+        System.out.print("STRING_LITERAL("+stgLit+") ");
+
+    }
+
+    private StringBuilder punctHelper(PushbackReader reader, StringBuilder strg) throws IOException {
+
+        char nextChar = (char)reader.read();
+        strg.append(nextChar);
+        reader.unread(nextChar);
+        return strg;
     }
 
     private void processToken(String token) {
