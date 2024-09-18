@@ -143,10 +143,10 @@ public class Scanner {
         reservedWords.put("for","FOR");
         reservedWords.put("synchronized","SYNCHRONIZED");
         reservedWords.put("float","FLOAT");
-        reservedWords.put("Xinu.print","XINUPRINT");
-        reservedWords.put("Xinu.println","XINUPRINTLN");
-        reservedWords.put("Xinu.printint","XINUPRINTINT");
-        reservedWords.put("Xinu.readint","XINUREADINT");
+        reservedWords.put("Xinu.print","PRINT");
+        reservedWords.put("Xinu.println","PRINTLN");
+        reservedWords.put("Xinu.printint","PRINTINT");
+        reservedWords.put("Xinu.readint","READINT");
         reservedWords.put("&&", "AND");
         reservedWords.put("!=","NOT");
         reservedWords.put("||","OR");
@@ -187,7 +187,7 @@ public class Scanner {
                             break;
                         }
                     }
-                }if(c == '*'){
+                }else if(c == '*'){
                     nextChar = pbReader.read();
                     c = (char) nextChar;
                     prevChar = nextChar;
@@ -198,7 +198,6 @@ public class Scanner {
                             break;
                         } 
                     }
-
                 }
             }
             if(c == '.'){
