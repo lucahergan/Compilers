@@ -170,7 +170,6 @@ public class Scanner {
         State currentState = State.START;
         int nextChar;
         StringBuilder tokenBuilder = new StringBuilder();
-        int prevChar;
 
         while ((nextChar = pbReader.read()) != -1) {
             char c = (char) nextChar;
@@ -303,14 +302,5 @@ public class Scanner {
         Scanner r = new Scanner();
         r.reader(fileReader);
         System.out.println("EOF");
-        /*
-        java.io.Reader reader = new java.io.StringReader("class Tester { public static void main(String[] a)" +
-                                                                "{" +
-                                                                    " int x;" +
-                                                                    "} " +
-                                                                 "}");
-        Scanner scanner = new Scanner();
-        scanner.reader(reader);
-        */
     }
 }
