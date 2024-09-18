@@ -173,6 +173,10 @@ public class Scanner {
 
         while ((nextChar = pbReader.read()) != -1) {
             char c = (char) nextChar;
+            if(c == '.'){
+                tokenBuilder.append(c);
+                c = (char) pbReader.read();
+            }
             if(c == '"'){
                 strgLiteralHelper(pbReader);
                 c =(char) pbReader.read();
