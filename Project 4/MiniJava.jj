@@ -303,13 +303,16 @@ Absyn.ClassDecl MainClassDeclaration(LinkedList<Absyn.ClassDecl> cl) :
 			new Absyn.ArrayType(	
 				new Absyn.IdentifierType("String")),
 					arg.toString())); }
-	"{" (LOOKAHEAD(VarDeclaration()) var = VarDeclaration()
+	"{" (LOOKAHEAD(VarDeclaration()) var = VarDeclaratio
 		{ locals.add(var); } )*
 	(stmt = Statement() { stmts.add(stmt); } )*
 	"}" "}"
 
 	{
-		// Handle logging of MainClass Decls
+    // Handle logging of MainClass Decls
+    cd = new Absyn.ClassDecl(name.toString(), arg.toString(), locals, methods); //creates class delcaration
+		cl.add(cd); 
+    return cd;
 		//adding values to more global structure
 
 	}
@@ -350,7 +353,9 @@ Absyn.ThreadDecl ThreadDeclaration(LinkedList<Absyn.ClassDecl> cl) :
 	  | LOOKAHEAD(2) 
 	    vd = VoidDeclaration()   { methods.add(vd); }
 	  | md = MethodDeclaration() { methods.add(md); } )*
-    	"}" {
+    	"}" 
+    //Logging Example  
+    {
 		cd = new Absyn.ThreadDecl(name.toString(),
 				fields, methods);
 		cl.add(cd);
@@ -399,7 +404,17 @@ Absyn.VoidDecl VoidDeclaration() :
 	
 }
 {
+"public" methodName = "void" <ID> "("")"
+    "{"
+    (LOOKAHEAD(VarDeclaration()) var = VarDeclaration
+		{ locals.add(var); } )*
+    (LOOKAHEAD())
+    "}"
 
+    //  Handle Logging of Void Class
+    {
+
+    }
 }
 
 // FieldDeclaration 	::= 	Type Identifier ";"
@@ -407,7 +422,8 @@ Absyn.VarDecl FieldDeclaration() :
 {
 	Absyn.Type type;
 	Token name;
-}
+}// get lit
 {
 
 }
+
