@@ -244,7 +244,7 @@ TOKEN :
 /***************/
 TOKEN :
 {
-      < ID: <LETTER> (<LETTER>|<DIGIT>)* >
+      < IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
     |
       < #LETTER:
           [
@@ -298,23 +298,23 @@ Absyn.ClassDecl MainClassDeclaration(LinkedList<Absyn.ClassDecl> cl) :
 }
 {
   "class" name = <ID> "{" "public" "static" "void" "main"
+	// Break in Grammer to manage data Structures
 	"(" "String" "[" "]" arg = <ID> ")"
 	{ formals.add(new Absyn.Formal(
 			new Absyn.ArrayType(	
 				new Absyn.IdentifierType("String")),
 					arg.toString())); }
+	 // creates 'formal' and adds it to formals 
 	"{" (LOOKAHEAD(VarDeclaration()) var = VarDeclaratio
 		{ locals.add(var); } )*
 	(stmt = Statement() { stmts.add(stmt); } )*
 	"}" "}"
-
+  // Handle logging of MainClass Decls
 	{
-    // Handle logging of MainClass Decls
     cd = new Absyn.ClassDecl(name.toString(), arg.toString(), locals, methods); //creates class delcaration
-		cl.add(cd); 
+	cl.add(cd); 
     return cd;
 		//adding values to more global structure
-
 	}
 }
 
@@ -331,7 +331,19 @@ Absyn.ClassDecl ClassDeclaration(LinkedList<Absyn.ClassDecl> cl) :
 	LinkedList<Absyn.MethodDecl> methods = new LinkedList<Absyn.MethodDecl>();	
 }
 {
-
+	"class" name = <ID> ["extends" <ID>]  
+  "{"
+   ( LOOKAHEAD(FieldDeclaration())    // Look for fieldecl if found add it to fields else keep looking
+    fd = FieldDeclaration() { fields.add(fd); }
+    | LOOKAHEAD(MethodDeclaration())
+      md = MethodDeclaration() { methods.add(md); } )*  
+  "}"
+  //Handle Logging
+  {
+    cd = new Absyn.ClassDecl(name.toString(), parStr, fields, methods); // Creates class declaration with given parameters
+    cl.add(cd); // adds class declartion to our parse tree strcuture (I think)
+    return cd;
+  }
 }
 
 // ThreadDeclaration 	::= 	"class" Identifier "extends" "Thread" "{" ( VarDeclaration )* ( MethodDeclaration | RunDeclaration )* "}"
@@ -406,14 +418,15 @@ Absyn.VoidDecl VoidDeclaration() :
 {
 "public" methodName = "void" <ID> "("")"
     "{"
-    (LOOKAHEAD(VarDeclaration()) var = VarDeclaration
-		{ locals.add(var); } )*
-    (LOOKAHEAD())
+    (LOOKAHEAD(VarDeclaration()) 
+    var = VarDeclaration() { locals.add(var); } )* // check and see if VarDeclartion Token is found
+    (LOOKAHEAD(Statement())
+    stmt = Statement() { stmts.add(stmt); } )*
     "}"
 
     //  Handle Logging of Void Class
     {
-
+      return VoidDecl(methodName, locals, stmts);
     }
 }
 
@@ -422,8 +435,11 @@ Absyn.VarDecl FieldDeclaration() :
 {
 	Absyn.Type type;
 	Token name;
-}// get lit
-{
-
 }
-
+{
+  type = Type() name = <ID> ";"
+  // Handle Logging
+  {
+     return new Absyn.VarDecl(type, name, null); /// create field declaration and return it 
+  }
+}
