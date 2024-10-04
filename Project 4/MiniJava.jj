@@ -426,4 +426,83 @@ Absyn.VarDecl FieldDeclaration() :
 {
 
 }
+Absyn.Expr Expression():
+{}
+{
+   LogicalOrExpression() 
+}
+
+
+Absyn.Expr LogicalOrExpression():
+{}
+{LogicalAndExpression()  (("||")LogicalAndExpression() )* }
+
+Absyn.Expr LogicalAndExpression():
+{}
+{EqualityExpression()  (("&&")EqualityExpression() )* }
+
+Absyn.Expr EqualityExpression():
+{}
+{RelationalExpression()  (("==")AdditiveExpression())* }
+
+Absyn.Expr RelationalExpression():
+{}
+{AdditiveExpression()  (("<"|">")AdditiveExpression() )*}
+
+Absyn.Expr AdditiveExpression():
+{}
+{MultiplicitiveExpression() ( ("+"|"-")MultiplicitiveExpression() )*}
+
+Absyn.Expr MultiplicitiveExpression():
+{}
+{UnaryExpression() (("*"|"/")(UnaryExpression()))}
+
+Absyn.Expr UnaryExpression():
+{}
+{("-"|"!")(UnaryExpression()|PostfixExpression() )}
+Absyn.Expr PostfixExpression():
+{
+
+}
+{
+    PrimaryExpression() (PostfixExpression())*
+
+}
+Absyn.Expr PrimaryExpression():
+{
+
+}
+{
+    "("Expression() ")"
+     | "new" Type() "(" ")"
+     | "new" Type() "[" Expression() "]" ( "[" "]" )*
+     | "Xinu" "." <ID> "(" ( Expression() ( "," Expression() )* )? ")"
+     | <ID>
+     | <INT>
+     | <STRING>
+     | "true"
+     | "false"
+     | "this"
+     | "null"
+}
+Absyn.Type Type() :
+{
+
+
+}
+{
+     ( BaseType()) ( "[" "]" )*
+
+}
+Absyn.Type BaseType() :
+{
+
+}
+{
+    <BOOLEAN>
+|
+    <INT>
+ |
+    <ID>
+}
 
