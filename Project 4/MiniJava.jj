@@ -417,19 +417,24 @@ Absyn.VoidDecl VoidDeclaration() :
     }
 }
 
-// FieldDeclaration 	::= 	Type Identifier ";"
+// FieldDeclaration 	::= 	Type Identifier ";" // get lit
 Absyn.VarDecl FieldDeclaration() :
 {
 	Absyn.Type type;
 	Token name;
-}// get lit
+}
 {
 
 }
 Absyn.Expr Expression():
 {}
 {
-   LogicalOrExpression() 
+   CompoundExpression() 
+}
+Absyn.Expr CompoundExpression():
+{}
+{
+    LogicalOrExpression() | (LogicalOrExpression() "," CompoundExpression() )
 }
 
 
