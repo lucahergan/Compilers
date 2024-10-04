@@ -305,14 +305,16 @@ Absyn.ClassDecl MainClassDeclaration(LinkedList<Absyn.ClassDecl> cl) :
 				new Absyn.IdentifierType("String")),
 					arg.toString())); }
 	 // creates 'formal' and adds it to formals 
-	"{" (LOOKAHEAD(VarDeclaration()) var = VarDeclaratio
+	"{" (LOOKAHEAD(VarDeclaration()) var = VarDeclaration()
 		{ locals.add(var); } )*
 	(stmt = Statement() { stmts.add(stmt); } )*
 	"}" "}"
   // Handle logging of MainClass Decls
 	{
+    md = new MethodDecl( ,TRUE ,name, formals, locals, stmts, );
+    methods.add(md);
     cd = new Absyn.ClassDecl(name.toString(), arg.toString(), locals, methods); //creates class delcaration
-	cl.add(cd); 
+	  cl.add(cd); 
     return cd;
 		//adding values to more global structure
 	}
@@ -403,6 +405,7 @@ Absyn.MethodDecl MethodDeclaration() :
 	
 }
 {
+
 }
 
 // VoidDeclaration 	::= 	"public" "void" Identifier "(" ( Type Identifier ( "," Type Identifier )* )? ")" "{" ( VarDeclaration )* ( Statement )* "}"
@@ -442,4 +445,88 @@ Absyn.VarDecl FieldDeclaration() :
   {
      return new Absyn.VarDecl(type, name, null); /// create field declaration and return it 
   }
+}
+
+Absyn.Expr Expression():
+{}
+{
+   return ArrayJava 
+}
+Absyn.Expr CompoundExpression():
+{}
+{
+    LogicalOrExpression() | (LogicalOrExpression() "," CompoundExpression() )
+}
+
+Absyn.Expr LogicalOrExpression():
+{}
+{LogicalAndExpression()  (("||")LogicalAndExpression() )* }
+
+Absyn.Expr LogicalAndExpression():
+{}
+{EqualityExpression()  (("&&")EqualityExpression() )* }
+
+Absyn.Expr EqualityExpression():
+{}
+{RelationalExpression()  (("==")AdditiveExpression())* }
+
+Absyn.Expr RelationalExpression():
+{}
+{AdditiveExpression()  (("<"|">")AdditiveExpression() )*}
+
+Absyn.Expr AdditiveExpression():
+{}
+{MultiplicitiveExpression() ( ("+"|"-")MultiplicitiveExpression() )*}
+
+Absyn.Expr MultiplicitiveExpression():
+{}
+{UnaryExpression() (("*"|"/")(UnaryExpression()))}
+
+Absyn.Expr UnaryExpression():
+{}
+{("-"|"!")(UnaryExpression()|PostfixExpression() )}
+Absyn.Expr PostfixExpression():
+{
+
+}
+{
+    PrimaryExpression() (PostfixExpression())*
+
+}
+Absyn.Expr PrimaryExpression():
+{
+
+}
+{
+    "("Expression() ")"
+     | "new" Type() "(" ")"
+     | "new" Type() "[" Expression() "]" ( "[" "]" )*
+     | "Xinu" "." <ID> "(" ( Expression() ( "," Expression() )* )? ")"
+     | <ID>
+     | <INT>
+     | <STRING>
+     | "true"
+     | "false"
+     | "this"
+     | "null"
+}
+Absyn.Type Type() :
+{
+
+
+}
+{
+     ( BaseType()) ( "[" "]" )*
+
+}
+Absyn.Type BaseType() :
+{
+
+}
+{
+    <BOOLEAN>
+ |
+    <INT>
+ |
+    <ID>
 }
