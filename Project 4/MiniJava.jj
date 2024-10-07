@@ -1,9 +1,9 @@
 
-PARSER_BEGIN(MiniJavaParser)
+PARSER_BEGIN(MiniJava)
   package Parse;
   import java.util.LinkedList;
-  public class MiniJavaParser {}
-PARSER_END(MiniJavaParser)
+  public class MiniJava{}
+PARSER_END(MiniJava)
 
 TOKEN_MGR_DECLS :
 {
@@ -86,8 +86,8 @@ TOKEN :
 
 	/* Types. */
 	// Add Types
-//    |  < INTEGER: "Integer">
-  //  | < STRING: "String">
+     |  < INTEGER: "Integer">
+     | < STRING: "String">
 
 	/* Operators. */
 	// Add Operators
@@ -297,13 +297,13 @@ Absyn.ClassDecl MainClassDeclaration(LinkedList<Absyn.ClassDecl> cl) :
 	LinkedList<Absyn.Stmt> stmts         = new LinkedList<Absyn.Stmt>();
 }
 {
-  "class" name = <ID> "{" "public" "static" "void" "main"
+  "class" name = <IDENTIFIER> "{" "public" "static" "void" "main"
 	// Break in Grammer to manage data Structures
-	"(" "String" "[" "]" arg = <ID> ")"
+	"(" "String" "[" "]" arg = <IDENTIFIER> ")"
 	{ formals.add(new Absyn.Formal(
 			new Absyn.ArrayType(	
-				new Absyn.IdentifierType("String")),
-					arg.toString())); }
+				new Absyn.IdentifierType("String")), arg.toString()
+					)); }
 	 // creates 'formal' and adds it to formals 
 	"{" (LOOKAHEAD(VarDeclaration()) var = VarDeclaration()
 		{ locals.add(var); } )*
@@ -311,9 +311,9 @@ Absyn.ClassDecl MainClassDeclaration(LinkedList<Absyn.ClassDecl> cl) :
 	"}" "}"
   // Handle logging of MainClass Decls
 	{
-    md = new MethodDecl( ,TRUE ,name, formals, locals, stmts, );
+    Absyn.MethodDecl md = new MethodDecl(null, false, "main", formals, locals, stmts, new IntegerLiteral(0));
     methods.add(md);
-    cd = new Absyn.ClassDecl(name.toString(), arg.toString(), locals, methods); //creates class delcaration
+    cd = new Absyn.ClassDecl(name.toString(), null, locals, methods); //creates class delcaration
 	  cl.add(cd); 
     return cd;
 		//adding values to more global structure
@@ -333,7 +333,7 @@ Absyn.ClassDecl ClassDeclaration(LinkedList<Absyn.ClassDecl> cl) :
 	LinkedList<Absyn.MethodDecl> methods = new LinkedList<Absyn.MethodDecl>();	
 }
 {
-	"class" name = <ID> ["extends" <ID>]  
+	"class" name = <IDENTIFIER> ["extends" <IDENTIFIER>]  
   "{"
    ( LOOKAHEAD(FieldDeclaration())    // Look for fieldecl if found add it to fields else keep looking
     fd = FieldDeclaration() { fields.add(fd); }
@@ -361,7 +361,7 @@ Absyn.ThreadDecl ThreadDeclaration(LinkedList<Absyn.ClassDecl> cl) :
 	LinkedList<Absyn.MethodDecl> methods = new LinkedList<Absyn.MethodDecl>();	
 }
 {
-  "class" name = <ID> "extends" "Thread" "{"
+  "class" name = <IDENTIFIER> "extends" "Thread" "{"
 	( LOOKAHEAD(FieldDeclaration())
 		fd = FieldDeclaration()  { fields.add(fd);  }
 	  | LOOKAHEAD(2) 
@@ -385,7 +385,7 @@ Absyn.VarDecl VarDeclaration() :
 	Absyn.Expr init = null;
 }
 {
-	type = Type() name = <ID> [ "=" init = Expression() ] ";"
+	type = Type() name = <IDENTIFIER> [ "=" init = Expression() ] ";"
 	{ return new Absyn.VarDecl(type, name.toString(), init); }
 }
 
@@ -405,9 +405,23 @@ Absyn.MethodDecl MethodDeclaration() :
 	
 }
 {
+  "public" ["synchronized"] returnType = Type() methodName = <IDENTIFIER> "(" [paramType = Type() paramName = <IDENTIFIER> 
+  ("," paramType = Type() paramName = <IDENTIFIER> )*]")"
+  	{ formals.add(new Absyn.Formal(
+			new Absyn.ArrayType(	
+				new Absyn.IdentifierType("String")), arg.toString()
+					)); }
+  "{"
+      (LOOKAHEAD(VarDeclaration()) var = VarDeclaration() {locals.add(var); })*
+      (stmt = Statement() { stmts.add(stmt); } )* 
+      "return" expr = Expression() ";" 
+  "}"
+  //Handle Logging
+  {
+
+  }
 
 }
-
 // VoidDeclaration 	::= 	"public" "void" Identifier "(" ( Type Identifier ( "," Type Identifier )* )? ")" "{" ( VarDeclaration )* ( Statement )* "}"
 Absyn.VoidDecl VoidDeclaration() :
 {
@@ -416,10 +430,9 @@ Absyn.VoidDecl VoidDeclaration() :
 	Absyn.Stmt stmt;
 	LinkedList<Absyn.VarDecl> locals  = new LinkedList<Absyn.VarDecl>();
 	LinkedList<Absyn.Stmt> stmts      = new LinkedList<Absyn.Stmt>();
-	
 }
 {
-"public" methodName = "void" <ID> "("")"
+"public" methodName = "void" <IDENTIFIER> "("")"
     "{"
     (LOOKAHEAD(VarDeclaration()) 
     var = VarDeclaration() { locals.add(var); } )* // check and see if VarDeclartion Token is found
@@ -440,7 +453,7 @@ Absyn.VarDecl FieldDeclaration() :
 	Token name;
 }
 {
-  type = Type() name = <ID> ";"
+  type = Type() name = <IDENTIFIER> ";"
   // Handle Logging
   {
      return new Absyn.VarDecl(type, name, null); /// create field declaration and return it 
@@ -450,12 +463,12 @@ Absyn.VarDecl FieldDeclaration() :
 Absyn.Expr Expression():
 {}
 {
-   return ArrayJava 
+  CompoundExpression() 
 }
 Absyn.Expr CompoundExpression():
 {}
 {
-    LogicalOrExpression() | (LogicalOrExpression() "," CompoundExpression() )
+  LogicalOrExpression() [(LogicalOrExpression() "," CompoundExpression() )]
 }
 
 Absyn.Expr LogicalOrExpression():
@@ -501,8 +514,8 @@ Absyn.Expr PrimaryExpression():
     "("Expression() ")"
      | "new" Type() "(" ")"
      | "new" Type() "[" Expression() "]" ( "[" "]" )*
-     | "Xinu" "." <ID> "(" ( Expression() ( "," Expression() )* )? ")"
-     | <ID>
+     | "Xinu" "." <IDENTIFIER> "(" ( Expression() ( "," Expression() )* )? ")"
+     | <IDENTIFIER>
      | <INT>
      | <STRING>
      | "true"
@@ -528,5 +541,14 @@ Absyn.Type BaseType() :
  |
     <INT>
  |
-    <ID>
+    <IDENTIFIER>
+}
+
+Absyn.Stmt Statement() :
+{}
+{
+  "{" (Statement())* "}"
+  | "if" "(" Expression() ")" Statement() ["else" Statement()]
+  | "while" "(" Expression() ")" Statement()
+  | "Xinu" "." <IDENTIFIER> "(" [Expression() ("," Expression())*] ")"
 }
