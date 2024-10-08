@@ -1,9 +1,9 @@
 
-PARSER_BEGIN(MiniJavaParser)
+PARSER_BEGIN(MiniJava)
   package Parse;
   import java.util.LinkedList;
-  public class MiniJavaParser {}
-PARSER_END(MiniJavaParser)
+  public class MiniJava{}
+PARSER_END(MiniJava)
 
 TOKEN_MGR_DECLS :
 {
@@ -30,7 +30,6 @@ SKIP :
 
 TOKEN :
 {
-
 	/* Reserved words. */
 	   < ABSTRACT: "abstract" >
      | < BOOLEAN: "boolean" >
@@ -82,12 +81,13 @@ TOKEN :
      | < VOID: "void" >
      | < VOLATILE: "volatile" >
      | < WHILE: "while" >
+     | < MAIN: "">
 	// Add reserved words
 
 	/* Types. */
 	// Add Types
-//    |  < INTEGER: "Integer">
-  //  | < STRING: "String">
+     | < INTEGER: "Integer">
+     | < STRING: "String">
 
 	/* Operators. */
 	// Add Operators
@@ -244,7 +244,7 @@ TOKEN :
 /***************/
 TOKEN :
 {
-      < ID: <LETTER> (<LETTER>|<DIGIT>)* >
+      < IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
     |
       < #LETTER:
           [
@@ -281,7 +281,9 @@ Absyn.Program Goal() :
 		( LOOKAHEAD(ClassDeclaration()) 
 		  ClassDeclaration(cl) | ThreadDeclaration(cl) )*
   <EOF>
-	{ return new Absyn.Program(cl); }
+  
+	{ System.out.println("Does this work?");
+    return new Absyn.Program(cl); }
 }
 
 // MainClass 	::= 	"class" Identifier "{" "public" "static" "void" "main" "(" "String" "[" "]" Identifier ")" "{" Statement "}" "}"
@@ -297,24 +299,26 @@ Absyn.ClassDecl MainClassDeclaration(LinkedList<Absyn.ClassDecl> cl) :
 	LinkedList<Absyn.Stmt> stmts         = new LinkedList<Absyn.Stmt>();
 }
 {
-  "class" name = <ID> "{" "public" "static" "void" "main"
-	"(" "String" "[" "]" arg = <ID> ")"
+  "class" name = <IDENTIFIER> "{" "public" "static" "void" "main"
+	// Break in Grammer to manage data Structures
+	"(" "String" "[" "]" arg = <IDENTIFIER> ")"
 	{ formals.add(new Absyn.Formal(
 			new Absyn.ArrayType(	
-				new Absyn.IdentifierType("String")),
-					arg.toString())); }
-	"{" (LOOKAHEAD(VarDeclaration()) var = VarDeclaratio
+				new Absyn.IdentifierType("String")), arg.toString()
+					)); }
+	 // creates 'formal' and adds it to formals 
+	"{" (LOOKAHEAD(VarDeclaration()) var = VarDeclaration()
 		{ locals.add(var); } )*
-	(stmt = Statement() { stmts.add(stmt); } )*
+	//(stmt = Statement() { stmts.add(stmt); } )*
 	"}" "}"
-
+  // Handle logging of MainClass Decls
 	{
-    // Handle logging of MainClass Decls
-    cd = new Absyn.ClassDecl(name.toString(), arg.toString(), locals, methods); //creates class delcaration
-		cl.add(cd); 
+    Absyn.MethodDecl md = new MethodDecl(null, false, "Main", formals, locals, stmts, 0);
+    methods.add(md);
+    cd = new Absyn.ClassDecl(name.toString(), null, locals, methods); //creates class delcaration
+	  cl.add(cd); 
     return cd;
 		//adding values to more global structure
-
 	}
 }
 
@@ -331,7 +335,19 @@ Absyn.ClassDecl ClassDeclaration(LinkedList<Absyn.ClassDecl> cl) :
 	LinkedList<Absyn.MethodDecl> methods = new LinkedList<Absyn.MethodDecl>();	
 }
 {
-
+	"class" name = <IDENTIFIER> ["extends" <IDENTIFIER>]  
+  "{"
+   ( LOOKAHEAD(FieldDeclaration())    // Look for fieldecl if found add it to fields else keep looking
+    fd = FieldDeclaration() { fields.add(fd); }
+    | LOOKAHEAD(MethodDeclaration())
+      md = MethodDeclaration() { methods.add(md); } )*  
+  "}"
+  //Handle Logging
+  {
+    cd = new Absyn.ClassDecl(name.toString(), parStr, fields, methods); // Creates class declaration with given parameters
+    cl.add(cd); // adds class declartion to our parse tree strcuture (I think)
+    return cd;
+  }
 }
 
 // ThreadDeclaration 	::= 	"class" Identifier "extends" "Thread" "{" ( VarDeclaration )* ( MethodDeclaration | RunDeclaration )* "}"
@@ -347,8 +363,8 @@ Absyn.ThreadDecl ThreadDeclaration(LinkedList<Absyn.ClassDecl> cl) :
 	LinkedList<Absyn.MethodDecl> methods = new LinkedList<Absyn.MethodDecl>();	
 }
 {
-  "class" name = <ID> "extends" "Thread" "{"
-	( LOOKAHEAD(FieldDeclaration())
+  "class" name = <IDENTIFIER> "extends" "Thread" "{"
+	( LOOKAHEAD(FieldDeclaration())    
 		fd = FieldDeclaration()  { fields.add(fd);  }
 	  | LOOKAHEAD(2) 
 	    vd = VoidDeclaration()   { methods.add(vd); }
@@ -371,7 +387,7 @@ Absyn.VarDecl VarDeclaration() :
 	Absyn.Expr init = null;
 }
 {
-	type = Type() name = <ID> [ "=" init = Expression() ] ";"
+	type = Type() name = <IDENTIFIER> [ "=" init = Expression() ] ";"
 	{ return new Absyn.VarDecl(type, name.toString(), init); }
 }
 
@@ -380,7 +396,7 @@ Absyn.MethodDecl MethodDeclaration() :
 {
 	Absyn.Type returnType, paramType;
 	Token methodName, paramName;
-//	Absyn.Formal formal;
+	Absyn.Formal formal;
 	Absyn.VarDecl var;
 	Absyn.Stmt stmt;
 	Absyn.Expr expr;
@@ -391,123 +407,135 @@ Absyn.MethodDecl MethodDeclaration() :
 	
 }
 {
-}
+  "public" ["synchronized"] returnType = Type() methodName = <IDENTIFIER> "(" [paramType = Type() paramName = <IDENTIFIER> 
+  ("," paramType = Type() paramName = <IDENTIFIER> )*]")"
+  	{ formals.add(new Absyn.Formal(paramType, paramName.toString()
+					)); } // Create formal with given param name and type  
+  "{"
+      (LOOKAHEAD(VarDeclaration()) var = VarDeclaration() {locals.add(var); })*
+      //(stmt = Statement() { stmts.add(stmt); } )* 
+      "return" expr = Expression() ";" 
+  "}"
+  //Handle Logging
+  {
+   return (new Absyn.MethodDecl(returnType, sync, methodName.toString(),
+   formals,locals,stmts, expr)); // Create MEthod Delcaration and Send it back up out grammar tree (Hopefully)
+  }
 
+}
 // VoidDeclaration 	::= 	"public" "void" Identifier "(" ( Type Identifier ( "," Type Identifier )* )? ")" "{" ( VarDeclaration )* ( Statement )* "}"
-Absyn.VoidDecl VoidDeclaration() :
+Absyn.VoidDecl VoidDeclaration():
 {
 	Token methodName;
 	Absyn.VarDecl var;
 	Absyn.Stmt stmt;
 	LinkedList<Absyn.VarDecl> locals  = new LinkedList<Absyn.VarDecl>();
 	LinkedList<Absyn.Stmt> stmts      = new LinkedList<Absyn.Stmt>();
-	
 }
 {
-"public" methodName = "void" <ID> "("")"
+"public" methodName = "void" <IDENTIFIER> "("")"
     "{"
-    (LOOKAHEAD(VarDeclaration()) var = VarDeclaration
-		{ locals.add(var); } )*
-    (LOOKAHEAD())
+    (LOOKAHEAD(VarDeclaration()) 
+    var = VarDeclaration() { locals.add(var); } )* // check and see if VarDeclartion Token is found
+    //(LOOKAHEAD(Statement())
+    //stmt = Statement() { stmts.add(stmt); } )*
     "}"
 
     //  Handle Logging of Void Class
     {
-
+      return (new Absyn.VoidDecl(methodName.toString(), locals, stmts));
     }
 }
 
-// FieldDeclaration 	::= 	Type Identifier ";" // get lit
-Absyn.VarDecl FieldDeclaration() :
+// FieldDeclaration 	::= 	Type Identifier ";"
+Absyn.VarDecl FieldDeclaration():
 {
 	Absyn.Type type;
 	Token name;
 }
 {
+  type = Type() name = <IDENTIFIER> ";"
+  // Handle Logging
+  { return new Absyn.VarDecl(type, name.toString(), null); } /// create field declaration and return it 
+}
 
+Absyn.Stmt Statement():
+{
+  Absyn.Stmt stmt;
+  //Absyn.Expr expr1;
+  //Absyn.Expr expr2;
+}
+{
+   stmt = AssignmentStatement()
+  //"{" (Statement())* "}"
+  //| "if" "(" Expression() ")" Statement() ["else" Statement()]
+  //| "while" "(" Expression() ")" Statement()
+  // | "Xinu" "." <IDENTIFIER> "(" [Expression() ("," Expression())*] ")"
+}
+/*
+Absyn.IfStmt IfStatement():
+{
+
+}
+{
+
+}
+Absyn.WhileStmt WhileStatement():
+{
+
+}
+{
+
+}
+Absyne.XinuCallStmt XinuCallStatement():
+{
+
+}
+{
+
+}
+*/
+Absyn.AssignStmt AssignmentStatement():
+{
+  Absyn.Expr lhs;
+  Absyn.Expr rhs;
+}
+{ 
+  lhs = Expression() rhs = Expression()
 }
 Absyn.Expr Expression():
-{}
 {
-   CompoundExpression() 
-}
-Absyn.Expr CompoundExpression():
-{}
-{
-    LogicalOrExpression() | (LogicalOrExpression() "," CompoundExpression() )
-}
-
-
-Absyn.Expr LogicalOrExpression():
-{}
-{LogicalAndExpression()  (("||")LogicalAndExpression() )* }
-
-Absyn.Expr LogicalAndExpression():
-{}
-{EqualityExpression()  (("&&")EqualityExpression() )* }
-
-Absyn.Expr EqualityExpression():
-{}
-{RelationalExpression()  (("==")AdditiveExpression())* }
-
-Absyn.Expr RelationalExpression():
-{}
-{AdditiveExpression()  (("<"|">")AdditiveExpression() )*}
-
-Absyn.Expr AdditiveExpression():
-{}
-{MultiplicitiveExpression() ( ("+"|"-")MultiplicitiveExpression() )*}
-
-Absyn.Expr MultiplicitiveExpression():
-{}
-{UnaryExpression() (("*"|"/")(UnaryExpression()))}
-
-Absyn.Expr UnaryExpression():
-{}
-{("-"|"!")(UnaryExpression()|PostfixExpression() )}
-Absyn.Expr PostfixExpression():
-{
-
+  Absyn.AssignableExpr expr;
 }
 {
-    PrimaryExpression() (PostfixExpression())*
 
+  AssignableExpression()
 }
-Absyn.Expr PrimaryExpression():
-{
 
-}
+Absyn.AssignableExpr AssignableExpression():
 {
-    "("Expression() ")"
-     | "new" Type() "(" ")"
-     | "new" Type() "[" Expression() "]" ( "[" "]" )*
-     | "Xinu" "." <ID> "(" ( Expression() ( "," Expression() )* )? ")"
-     | <ID>
-     | <INT>
-     | <STRING>
-     | "true"
-     | "false"
-     | "this"
-     | "null"
-}
-Absyn.Type Type() :
-{
-
-
+Absyn.IdentifierExpr expr;
 }
 {
-     ( BaseType()) ( "[" "]" )*
-
+  IdentifierExpression()
 }
-Absyn.Type BaseType() :
-{
 
+Absyn.IdentifierExpr IdentifierExpression():
+{
+  String id = null;
+  Absyn.Expr expr;
+}
+{
+  {
+    return new Absyn.IdentifierExpr(id);
+  }
+}
+
+Absyn.Type Type():
+{
 }
 {
     <BOOLEAN>
-|
     <INT>
- |
-    <ID>
+    <IDENTIFIER>
 }
-
