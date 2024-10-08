@@ -281,7 +281,9 @@ Absyn.Program Goal() :
 		( LOOKAHEAD(ClassDeclaration()) 
 		  ClassDeclaration(cl) | ThreadDeclaration(cl) )*
   <EOF>
-	{ return new Absyn.Program(cl); }
+  
+	{ System.out.println("Does this work?");
+    return new Absyn.Program(cl); }
 }
 
 // MainClass 	::= 	"class" Identifier "{" "public" "static" "void" "main" "(" "String" "[" "]" Identifier ")" "{" Statement "}" "}"
@@ -424,7 +426,7 @@ Absyn.MethodDecl MethodDeclaration() :
 
 }
 // VoidDeclaration 	::= 	"public" "void" Identifier "(" ( Type Identifier ( "," Type Identifier )* )? ")" "{" ( VarDeclaration )* ( Statement )* "}"
-Absyn.VoidDecl VoidDeclaration() :
+Absyn.VoidDecl VoidDeclaration():
 {
 	Token methodName;
 	Absyn.VarDecl var;
@@ -448,7 +450,7 @@ Absyn.VoidDecl VoidDeclaration() :
 }
 
 // FieldDeclaration 	::= 	Type Identifier ";"
-Absyn.VarDecl FieldDeclaration() :
+Absyn.VarDecl FieldDeclaration():
 {
 	Absyn.Type type;
 	Token name;
@@ -459,20 +461,20 @@ Absyn.VarDecl FieldDeclaration() :
   { return new Absyn.VarDecl(type, name.toString(), null); } /// create field declaration and return it 
 }
 
-Absyn.Stmt Statement() :
+Absyn.Stmt Statement():
 {
   Absyn.Stmt stmt;
-  Absyn.Expr expr1;
-  Absyn.Expr expr2;
-
+  //Absyn.Expr expr1;
+  //Absyn.Expr expr2;
 }
 {
-  "{" (Statement())* "}"
-  | "if" "(" Expression() ")" Statement() ["else" Statement()]
-  | "while" "(" Expression() ")" Statement()
-  | "Xinu" "." <IDENTIFIER> "(" [Expression() ("," Expression())*] ")"
+   stmt = AssignmentStatement()
+  //"{" (Statement())* "}"
+  //| "if" "(" Expression() ")" Statement() ["else" Statement()]
+  //| "while" "(" Expression() ")" Statement()
+  // | "Xinu" "." <IDENTIFIER> "(" [Expression() ("," Expression())*] ")"
 }
-
+/*
 Absyn.IfStmt IfStatement():
 {
 
@@ -489,17 +491,26 @@ Absyn.WhileStmt WhileStatement():
 }
 Absyne.XinuCallStmt XinuCallStatement():
 {
-  
+
 }
 {
 
 }
-
+*/
+Absyn.AssignStmt AssignmentStatement():
+{
+  Absyn.Expr lhs;
+  Absyn.Expr rhs;
+}
+{ 
+  lhs = Expression() rhs = Expression()
+}
 Absyn.Expr Expression():
 {
   Absyn.AssignableExpr expr;
 }
 {
+
   AssignableExpression()
 }
 
@@ -522,9 +533,8 @@ Absyn.IdentifierExpr IdentifierExpression():
   }
 }
 
-Absyn.Type Type() :
+Absyn.Type Type():
 {
-
 }
 {
     <BOOLEAN>
