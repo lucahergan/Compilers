@@ -409,7 +409,9 @@ Absyn.MethodDecl MethodDeclaration() :
 {
   "public" ["synchronized"] returnType = Type() methodName = <IDENTIFIER> "(" [paramType = Type() paramName = <IDENTIFIER> 
   ("," paramType = Type() paramName = <IDENTIFIER> )*]")"
-  	{ formals.add(new Absyn.Formal(paramType, paramName.toString()
+  
+  paramType = Type() paramName = <IDENTIFIER>
+  { formals.add(new Absyn.Formal(paramType, paramName.toString()
 					)); } // Create formal with given param name and type  
   "{"
       (LOOKAHEAD(VarDeclaration()) var = VarDeclaration() {locals.add(var); })*
@@ -437,8 +439,8 @@ Absyn.VoidDecl VoidDeclaration():
     "{"
     (LOOKAHEAD(VarDeclaration()) 
     var = VarDeclaration() { locals.add(var); } )* // check and see if VarDeclartion Token is found
-    //(LOOKAHEAD(Statement())
-    //stmt = Statement() { stmts.add(stmt); } )*
+    (LOOKAHEAD(Statement())
+    stmt = Statement() { stmts.add(stmt); } )*
     "}"
 
     //  Handle Logging of Void Class
@@ -575,38 +577,34 @@ Absyn.Expr PrimaryExpression():
 Absyn.Expr e1;
 }
 {
-     "Xinu" "." <IDENTIFIER> "(" ( Expression() ( "," Expression() )* )? ")"
-     | <IDENTIFIER>
+     <IDENTIFIER>
      | <INT>
-     | <STRING> {return new Absyn.}
+     | <STRING>
      | "true" {return new Absyn.TrueExpr();}
      | "false" {return new Absyn.FalseExpr();}
      | "this" {return new Absyn.ThisExpr();}
      | "null" {return new Absyn.NullExpr();}
      | "("Expression() ")"
 }
+
 Absyn.Type Type() :
 {
 Absyn.Type t1;
-
-}
-{
-  ( BaseType()) ( "[" "]" )*
-}
-Absyn.Type BaseType() :
-{
+Token name = null;
 }
 {
   "boolean" {return new Absyn.BooleanType();}
  |"int" {return new Absyn.IntegerType();} 
- |<IDENTIFIER> {return new Absyn.IdentifierType();}
+ |<IDENTIFIER> {return new Absyn.IdentifierType(name.toString());}
 }
 
 Absyn.Stmt Statement() :
-{}
 {
-  "{" (Statement())* "}"
-  | "if" "(" Expression() ")" Statement()
-  | "while" "(" Expression() ")" Statement()
-  | "Xinu" "." <IDENTIFIER> "(" [Expression() ("," Expression())*] ")"
+Absyn.Expr expr = null;
+Absyn.Stmt stm1 = null;
+Absyn.Stmt stm2 = null;
+}
+{
+  "if" "(" Expression() ")" Statement() {return new Absyn.IfStmt(expr,stm1,stm2);}
+  | "while" "(" Expression() ")" Statement() {return new Absyn.WhileStmt(expr,stm1);}
 }
