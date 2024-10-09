@@ -1,4 +1,10 @@
-
+/**
+ * COSC 4400 - Project 4
+ * Explain briefly the functionality of the program.
+ * @authors Joe Loparco, Luca Hergan, Rosemary Shelton
+ * Instructor Jake Forden
+ * TA-BOT:MAILTO Joseph.loparco@marquette.edu rosemary.shelton@marquette.edu luca.hergan@marquette.edu
+ */
 PARSER_BEGIN(MiniJava)
   package Parse;
   import java.util.LinkedList;
@@ -279,7 +285,7 @@ Absyn.Program Goal() :
 {
 	MainClassDeclaration(cl) 
 		( LOOKAHEAD(ClassDeclaration()) 
-		  ClassDeclaration(cl) | ThreadDeclaration(cl) )*
+		  ClassDeclaration(cl) | ThreadDeclaration(cl) )* 
   <EOF>
   
 	{ return new Absyn.Program(cl); }
@@ -306,13 +312,15 @@ Absyn.ClassDecl MainClassDeclaration(LinkedList<Absyn.ClassDecl> cl) :
 					arg.toString())); }
 	"{" (LOOKAHEAD(VarDeclaration()) var = VarDeclaration()
 		{ locals.add(var); } )*
-	(stmt = Statement() { stmts.add(stmt); } )*
+    (LOOKAHEAD(Statement()) stmt = Statement() 
+    { stmts.add(stmt); } )*
 	"}" "}"
   // Handle logging of MainClass Decls
 	{
+    //if (locals.peek() == null){ fields = null;} 
     Absyn.MethodDecl md = new Absyn.MethodDecl(null, false, "Main", formals, locals, stmts, new Absyn.IntegerLiteral(0));
     methods.add(md);
-    cd = new Absyn.ClassDecl(name.toString(), null, locals, methods); //creates class delcaration
+    cd = new Absyn.ClassDecl(name.toString(), null, new LinkedList<Absyn.VarDecl>(), methods); //creates class delcaration
 	  cl.add(cd); 
     return cd;
 		//adding values to more global structure
@@ -335,12 +343,13 @@ Absyn.ClassDecl ClassDeclaration(LinkedList<Absyn.ClassDecl> cl) :
 	"class" name = <IDENTIFIER> ["extends" <IDENTIFIER>]  
   "{"
    ( LOOKAHEAD(FieldDeclaration())    // Look for fieldecl if found add it to fields else keep looking
-    fd = FieldDeclaration() { fields.add(fd); }
-    | LOOKAHEAD(MethodDeclaration())
-      md = MethodDeclaration() { methods.add(md); } )*  
+    fd = FieldDeclaration() { fields.add(fd); } )*
+   ( LOOKAHEAD(MethodDeclaration())
+     md = MethodDeclaration() { methods.add(md); } )*  
   "}"
   //Handle Logging
   {
+    //if (fields.peek() == null){ fields = null;} 
     cd = new Absyn.ClassDecl(name.toString(), parStr, fields, methods); // Creates class declaration with given parameters
     cl.add(cd); // adds class declartion to our parse tree strcuture (I think)
     return cd;
@@ -361,9 +370,10 @@ Absyn.ThreadDecl ThreadDeclaration(LinkedList<Absyn.ClassDecl> cl) :
 }
 {
   "class" name = <IDENTIFIER> "extends" "Thread" "{"
-	( LOOKAHEAD(FieldDeclaration())    
-		fd = FieldDeclaration()  { fields.add(fd);  }
-	  | LOOKAHEAD(2) 
+	( LOOKAHEAD(VarDeclaration())    
+		fd = VarDeclaration()  { fields.add(fd);  }
+  )*
+  ( LOOKAHEAD(2) 
 	    vd = VoidDeclaration()   { methods.add(vd); }
 	  | md = MethodDeclaration() { methods.add(md); } )*
     	"}" 
@@ -388,11 +398,11 @@ Absyn.VarDecl VarDeclaration() :
 	{return new Absyn.VarDecl(type, name.toString(), init); }
 }
 
-// MethodDeclaration 	::= 	"public" ( "synchronized" )? Type Identifier "(" ( Type Identifier ( "," Type Identifier )* )? ")" "{" ( VarDeclaration )* ( Statement )* "return" Expression ";" "}"
+// MethodDeclaration 	::= 	"public" ( "synchronized" )? Type Identifier "(" ( Type Identifier ( "," Type Identifier )* )? ")" "{" ( VarDeclaration )* ( Statement )* "return" Expression ";" "}" Testing
 Absyn.MethodDecl MethodDeclaration() :
 {
-	Absyn.Type returnType, paramType;
-	Token methodName, paramName;
+	Absyn.Type returnType, paramType= null;
+	Token methodName, paramName = null;
 	Absyn.Formal formal;
 	Absyn.VarDecl var;
 	Absyn.Stmt stmt;
@@ -406,12 +416,14 @@ Absyn.MethodDecl MethodDeclaration() :
 {
   "public" ["synchronized"] returnType = Type() methodName = <IDENTIFIER> "(" [paramType = Type() paramName = <IDENTIFIER> 
   ("," paramType = Type() paramName = <IDENTIFIER> )*]")"
-  
-  paramType = Type() paramName = <IDENTIFIER>
-  { formals.add(new Absyn.Formal(paramType, paramName.toString()
+  {
+  //paramType = Type() paramName = <IDENTIFIER> 
+    formals.add(new Absyn.Formal(paramType, paramName.toString()
 					)); } // Create formal with given param name and type  
   "{"
       (LOOKAHEAD(VarDeclaration()) var = VarDeclaration() {locals.add(var); })*
+
+      (LOOKAHEAD(Statement()) stmt = Statement() {stmts.add(stmt); })*
       //(stmt = Statement() { stmts.add(stmt); } )* 
       "return" expr = Expression() ";" 
   "}"
@@ -422,7 +434,7 @@ Absyn.MethodDecl MethodDeclaration() :
   }
 
 }
-// VoidDeclaration 	::= 	"public" "void" Identifier "(" ( Type Identifier ( "," Type Identifier )* )? ")" "{" ( VarDeclaration )* ( Statement )* "}"
+// VoidDeclaration 	::= 	"public" "void" Identifier "(" ( Type Identifier ( "," Type Identifier )* )? ")\]{" ( VarDeclaration )* ( Statement )* "}"
 Absyn.VoidDecl VoidDeclaration():
 {
 	Token methodName;
@@ -458,6 +470,16 @@ Absyn.VarDecl FieldDeclaration():
   { return new Absyn.VarDecl(type, name.toString(), null); } /// create field declaration and return it 
 }
 
+Absyn.Stmt Statement() :
+{
+Absyn.Expr expr = null;
+Absyn.Stmt stm1 = null;
+Absyn.Stmt stm2 = null;
+}
+{
+  "if" "(" Expression() ")" Statement() {return new Absyn.IfStmt(expr,stm1,stm2);}
+  | "while" "(" Expression() ")" Statement() {return new Absyn.WhileStmt(expr,stm1);}
+}
 
 Absyn.Expr Expression():
 {
@@ -595,7 +617,7 @@ Token name = null;
  |"int" {return new Absyn.IntegerType();} 
  |<IDENTIFIER> {return new Absyn.IdentifierType(name.toString());}
 }
-
+/*
 Absyn.Stmt Statement() :
 {
 Absyn.Expr expr = null;
@@ -606,3 +628,4 @@ Absyn.Stmt stm2 = null;
   "if" "(" Expression() ")" Statement() {return new Absyn.IfStmt(expr,stm1,stm2);}
   | "while" "(" Expression() ")" Statement() {return new Absyn.WhileStmt(expr,stm1);}
 }
+*/
