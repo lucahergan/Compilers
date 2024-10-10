@@ -38,7 +38,6 @@ TOKEN :
 {
 	/* Reserved words. */
 	   < ABSTRACT: "abstract" >
-     | < BOOLEAN: "boolean" >
      | < BREAK: "break" >
      | < BYTE: "byte" >
      | < CASE: "case" >
@@ -69,6 +68,8 @@ TOKEN :
      | < NEW: "new" >
      | < NULL: "null" >
      | < PACKAGE: "package">
+     | < PRINT: "print" >
+     | < PRINTLN: "println" >
      | < PRIVATE: "private" >
      | < PROTECTED: "protected" >
      | < PUBLIC: "public" > //nice
@@ -87,11 +88,13 @@ TOKEN :
      | < VOID: "void" >
      | < VOLATILE: "volatile" >
      | < WHILE: "while" >
+     | < XINU: "Xinu">
      | < MAIN: "main">
 	// Add reserved words
 
 	/* Types. */
 	// Add Types
+     | < BOOLEAN: "boolean" >
      | < INTEGER: "Integer">
      | < STRING: "String">
 
@@ -472,14 +475,29 @@ Absyn.VarDecl FieldDeclaration():
 
 Absyn.Stmt Statement() :
 {
-Absyn.Expr expr = null;
-Absyn.Stmt stm1 = null;
-Absyn.Stmt stm2 = null;
+Absyn.Stmt stmt; 
+Absyn.Expr lhs;
+Absyn.Expr rhs;
+}
+{ 
+   lhs = Expression() "=" rhs = Expression() 
+  // "if" "(" Expression() ")" Statement() {return new Absyn.IfStmt(expr,stm1,stm2);}
+  // "while" "(" Expression() ")" Statement() {return new Absyn.WhileStmt(expr,stm1);}
+  //"Xinu" "." "print" "(" Expression() ")" ";" {return new  Absyn.XinuCallStmt("print", new LinkedList<Absyn.Expr>());}
+  //LOOKAHEAD(AssignmentStatement()) AssignmentStatement() {return new Absyn.AssignStmt(expr,expr2);}
+  {return new Absyn.AssignStmt(lhs,rhs);}
+}
+
+Absyn.AssignStmt AssignmentStatement():
+{
+Absyn.Expr lhs;
+Absyn.Expr rhs;
 }
 {
-  "if" "(" Expression() ")" Statement() {return new Absyn.IfStmt(expr,stm1,stm2);}
-  | "while" "(" Expression() ")" Statement() {return new Absyn.WhileStmt(expr,stm1);}
+lhs = Expression() "=" rhs = Expression() 
+{return (new Absyn.AssignStmt(lhs,rhs));}
 }
+
 
 Absyn.Expr Expression():
 {
@@ -487,10 +505,21 @@ Absyn.Expr e1;
 Absyn.Expr e2;
 }
 {
-  e1 = LogicalOrExpression() ("," e2 = PrimaryExpression() {e1 = new Absyn.OrExpr(e1,e2);} )*
+  e1 = PrimaryExpression() // ("=" e2 = PrimaryExpression() {e1 = new Absyn.AssignableExpr(e1,e2);} )*
   {return e1;}
 }
+/*
+Absysn.AssignableExpr AssignmentExpression():
+{
+}
+{
+  lhs = PrimaryExpression() [Statement()]
+  {
+    return (new Absyn.AssignableExpr(lhs,null));
+  }
 
+}
+*/
 Absyn.Expr LogicalOrExpression():
 {
 Absyn.Expr e1;
@@ -606,6 +635,7 @@ Absyn.Expr e2;
      | "null" {return new Absyn.NullExpr();}
      | "("Expression() ")"
 }
+
 
 Absyn.Type Type() :
 {
