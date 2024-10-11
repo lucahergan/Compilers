@@ -479,6 +479,18 @@ Absyn.Stmt stm2 = null;
 {
   "if" "(" Expression() ")" Statement() {return new Absyn.IfStmt(expr,stm1,stm2);}
   | "while" "(" Expression() ")" Statement() {return new Absyn.WhileStmt(expr,stm1);}
+  |LOOKAHEAD(AssignmentStatement()) stm1 = AssignmentStatement()
+  {return stm1; }
+}
+
+Abysn.AssignStmt AssignmentStatement() :
+{
+ Abysn.AssignableExpr lhs = null;
+ Absyn.Expr rhs = null;
+}
+{
+lhs = Expression() "=" rhs = Expression() ";"
+{return new Absyn.AssignStmt(lhs,rhs) ;}
 }
 
 Absyn.Expr Expression():
@@ -489,6 +501,16 @@ Absyn.Expr e2;
 {
   e1 = LogicalOrExpression() ("," e2 = PrimaryExpression() {e1 = new Absyn.OrExpr(e1,e2);} )*
   {return e1;}
+}
+
+Absyn.AssignStmt AssignableExpression():
+{
+Token name = null;
+}
+{
+  LOOKAHEAD(<IDENTIFIER>) name = <IDENTIFIER>
+  {return name;}
+// Can go to <ID> or to ArrayType
 }
 
 Absyn.Expr LogicalOrExpression():
