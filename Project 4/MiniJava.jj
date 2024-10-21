@@ -479,153 +479,70 @@ Absyn.Stmt stm2 = null;
 {
   "if" "(" Expression() ")" Statement() {return new Absyn.IfStmt(expr,stm1,stm2);}
   | "while" "(" Expression() ")" Statement() {return new Absyn.WhileStmt(expr,stm1);}
+  |stm1 = AssignmentStatement() {return stm1;}
+}
+
+Abysn.AssignStmt AssignmentStatement():
+{
+  Absyn.AssignableExpr lhs = null;
+  Absyn.Expr rhs = null;
+}
+{
+  lhs = AssignableExpression() "=" rhs = Expression() ";" 
+  { 
+    return new Absyn.AssignStmt(lhs, rhs);  
+  }
 }
 
 Absyn.Expr Expression():
 {
-Absyn.Expr e1;
-Absyn.Expr e2;
+  Absyn.Expr expr = null;
 }
 {
-  e1 = LogicalOrExpression() ("," e2 = PrimaryExpression() {e1 = new Absyn.OrExpr(e1,e2);} )*
-  {return e1;}
+  expr = AssignableExpression()
+  { return expr; }
+
 }
 
-Absyn.Expr LogicalOrExpression():
+Absyn.AssignableExpr AssignableExpression():
 {
-Absyn.Expr e1;
-Absyn.Expr e2;
+  Token name = null;
+  Absyn.Expr target = null;
+  Absyn.Expr index = null; 
 }
 {
- e1 = LogicalAndExpression()  (("||") e2 = LogicalAndExpression() {e1 = new Absyn.AndExpr(e1,e2);} )* 
- {return e1;}
-}
-
-Absyn.Expr LogicalAndExpression():
-{
-Absyn.Expr e1;
-Absyn.Expr e2;
-}
-{
- e1 = EqualityExpression()  (("&&") e2 = EqualityExpression() {e1 = new Absyn.EqualExpr(e1,e2);} )* 
- {return e1;}
+    LOOKAHEAD(2)
+    name = <IDENTIFIER> { return new Absyn.IdentifierExpr(name.image); }
+    | target = IdentifierExpr() "[" index = Expression() "]" { return new Absyn.ArrayExpr(target, index); }
 }
 
-Absyn.Expr EqualityExpression():
+Absyn.IdentifierExpr IdentifierExpression():
 {
-Absyn.Expr e1;
-Absyn.Expr e2;
+
+  Token t = null;
 }
 {
- e1 = GreaterExpression()  (("==") e2 = GreaterExpression() {e1 = new Absyn.GreaterExpr(e1,e2);} )* 
- {return e1;}
+  t = <IDENTIFIER> { return new Absyn.IdentifierExpr(t.tostring())}; 
+
 }
 
-Absyn.Expr GreaterExpression():
-{
-Absyn.Expr e1;
-Absyn.Expr e2;
-}
-{
- e1 = LessExpression()  ((">")e2 = LessExpression() {e1 = new Absyn.LesserExpr(e1,e2);} )* 
- {return e1;}
-}
+  Absyn.Type Type() :
+  {
+    Absyn.Type type = null;
+    Token t = null;
+  }
+  {
+    ( 
+      type = BaseType() ( "[" "]" { type = new Absyn.ArrayType(type); } )* 
+      { return type; }
+    )
+    | t = <IDENTIFIER> { return new Absyn.IdentifierType(t.image); }
+  }
+  
+  Absyn.Type BaseType() :
+  {}
+  {
+    "int"  { return new Absyn.BaseType(Absyn.Type.INT); }
+    | "boolean" { return new Absyn.BaseType(Absyn.Type.BOOLEAN); } 
+  }
 
-Absyn.Expr LessExpression():
-{
-Absyn.Expr e1;
-Absyn.Expr e2;
-}
-{
- e1 = AdditiveExpression()  (("<")e2 = AdditiveExpression() {e1 = new Absyn.AddExpr(e1,e2);} )* 
- {return e1;}
-}
-
-Absyn.Expr AdditiveExpression():
-{
-Absyn.Expr e1;
-Absyn.Expr e2;
-}
-{
- e1 = SubtractExpression() (("+")e2 = SubtractExpression() {e1 = new Absyn.SubExpr(e1,e2);} )* 
- {return e1;}
-}
-
-Absyn.Expr SubtractExpression():
-{
-Absyn.Expr e1;
-Absyn.Expr e2;
-}
-{
- e1 = MultiplicitiveExpression() (("-")e2 = MultiplicitiveExpression() {e1 = new Absyn.MulExpr(e1,e2);} )* 
- {return e1;}
-}
-
-Absyn.Expr MultiplicitiveExpression():
-{
-Absyn.Expr e1;
-Absyn.Expr e2;
-}
-{
- e1 = DivisionExpression() (("*")e2 = DivisionExpression() {e1 = new Absyn.DivExpr(e1,e2);} )* 
- {return e1;}
-}
-
-Absyn.Expr DivisionExpression():
-{
-Absyn.Expr e1;
-Absyn.Expr e2;
-}
-{
- e1 = NotExpression() (("/")e2 = NotExpression() {e1 = new Absyn.NotExpr(e1);} )* 
- {return e1;}
-}
-
-Absyn.Expr NotExpression():
-{
-Absyn.Expr e1;
-Absyn.Expr e2;
-}
-{
- e1 = PrimaryExpression()
- {return e1;}
-}
-
-Absyn.Expr PrimaryExpression():
-{
-Absyn.Expr e1;
-Absyn.Expr e2;
-}
-{
-     <IDENTIFIER>
-     | <INT>
-     | <STRING>
-     | "true" {return new Absyn.TrueExpr();}
-     | "false" {return new Absyn.FalseExpr();}
-     | "this" {return new Absyn.ThisExpr();}
-     | "null" {return new Absyn.NullExpr();}
-     | "("Expression() ")"
-}
-
-Absyn.Type Type() :
-{
-Absyn.Type t1;
-Token name = null;
-}
-{
-  "boolean" {return new Absyn.BooleanType();}
- |"int" {return new Absyn.IntegerType();} 
- |<IDENTIFIER> {return new Absyn.IdentifierType(name.toString());}
-}
-/*
-Absyn.Stmt Statement() :
-{
-Absyn.Expr expr = null;
-Absyn.Stmt stm1 = null;
-Absyn.Stmt stm2 = null;
-}
-{
-  "if" "(" Expression() ")" Statement() {return new Absyn.IfStmt(expr,stm1,stm2);}
-  | "while" "(" Expression() ")" Statement() {return new Absyn.WhileStmt(expr,stm1);}
-}
-*/
