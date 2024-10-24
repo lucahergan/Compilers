@@ -1,3 +1,4 @@
+
 /**
  * COSC 4400 - Project 4
  * Explain briefly the functionality of the program.
@@ -88,6 +89,7 @@ TOKEN :
      | < VOLATILE: "volatile" >
      | < WHILE: "while" >
      | < MAIN: "main">
+     | < THREAD: "Thread">
 	// Add reserved words
 
 	/* Types. */
@@ -151,6 +153,7 @@ TOKEN :
 	// reserved words
 
 	// xinu shit
+  | <XINU: "Xinu" >
 }
 
 /***********************/
@@ -285,7 +288,7 @@ Absyn.Program Goal() :
 {
 	MainClassDeclaration(cl) 
 		( LOOKAHEAD(ClassDeclaration()) 
-		  ClassDeclaration(cl) | ThreadDeclaration(cl) )* 
+		  ClassDeclaration(cl) | ThreadDeclaration(cl) )*
   <EOF>
   
 	{ return new Absyn.Program(cl); }
@@ -312,18 +315,16 @@ Absyn.ClassDecl MainClassDeclaration(LinkedList<Absyn.ClassDecl> cl) :
 					arg.toString())); }
 	"{" (LOOKAHEAD(VarDeclaration()) var = VarDeclaration()
 		{ locals.add(var); } )*
-    (LOOKAHEAD(Statement()) stmt = Statement() 
-    { stmts.add(stmt); } )*
+	(stmt = Statement() { stmts.add(stmt); } )*
 	"}" "}"
   // Handle logging of MainClass Decls
 	{
-    //if (locals.peek() == null){ fields = null;} 
-    Absyn.MethodDecl md = new Absyn.MethodDecl(null, false, "Main", formals, locals, stmts, new Absyn.IntegerLiteral(0));
+    Absyn.MethodDecl md = new Absyn.MethodDecl(null, false, "main", formals, locals, stmts, new Absyn.IntegerLiteral(0));
     methods.add(md);
     cd = new Absyn.ClassDecl(name.toString(), null, new LinkedList<Absyn.VarDecl>(), methods); //creates class delcaration
 	  cl.add(cd); 
     return cd;
-		//adding values to more global structure
+		//adding values to more global structure 
 	}
 }
 
@@ -343,14 +344,13 @@ Absyn.ClassDecl ClassDeclaration(LinkedList<Absyn.ClassDecl> cl) :
 	"class" name = <IDENTIFIER> ["extends" <IDENTIFIER>]  
   "{"
    ( LOOKAHEAD(FieldDeclaration())    // Look for fieldecl if found add it to fields else keep looking
-    fd = FieldDeclaration() { fields.add(fd); } )*
-   ( LOOKAHEAD(MethodDeclaration())
-     md = MethodDeclaration() { methods.add(md); } )*  
+    fd = FieldDeclaration() { fields.add(fd); }
+    | LOOKAHEAD(MethodDeclaration())
+      md = MethodDeclaration() { methods.add(md); } )*  
   "}"
   //Handle Logging
   {
-    //if (fields.peek() == null){ fields = null;} 
-    cd = new Absyn.ClassDecl(name.toString(), parStr, fields, methods); // Creates class declaration with given parameters
+    cd = new Absyn.ClassDecl(name.toString(), parStr, null, methods); // Creates class declaration with given parameters
     cl.add(cd); // adds class declartion to our parse tree strcuture (I think)
     return cd;
   }
@@ -370,10 +370,9 @@ Absyn.ThreadDecl ThreadDeclaration(LinkedList<Absyn.ClassDecl> cl) :
 }
 {
   "class" name = <IDENTIFIER> "extends" "Thread" "{"
-	( LOOKAHEAD(VarDeclaration())    
-		fd = VarDeclaration()  { fields.add(fd);  }
-  )*
-  ( LOOKAHEAD(2) 
+	( LOOKAHEAD(FieldDeclaration())    
+		fd = FieldDeclaration()  { fields.add(fd);  }
+	  | LOOKAHEAD(2) 
 	    vd = VoidDeclaration()   { methods.add(vd); }
 	  | md = MethodDeclaration() { methods.add(md); } )*
     	"}" 
@@ -398,11 +397,11 @@ Absyn.VarDecl VarDeclaration() :
 	{return new Absyn.VarDecl(type, name.toString(), init); }
 }
 
-// MethodDeclaration 	::= 	"public" ( "synchronized" )? Type Identifier "(" ( Type Identifier ( "," Type Identifier )* )? ")" "{" ( VarDeclaration )* ( Statement )* "return" Expression ";" "}" Testing
+// MethodDeclaration 	::= 	"public" ( "synchronized" )? Type Identifier "(" ( Type Identifier ( "," Type Identifier )* )? ")" "{" ( VarDeclaration )* ( Statement )* "return" Expression ";" "}"
 Absyn.MethodDecl MethodDeclaration() :
 {
-	Absyn.Type returnType, paramType= null;
-	Token methodName, paramName = null;
+	Absyn.Type returnType, paramType;
+	Token methodName, paramName;
 	Absyn.Formal formal;
 	Absyn.VarDecl var;
 	Absyn.Stmt stmt;
@@ -416,25 +415,23 @@ Absyn.MethodDecl MethodDeclaration() :
 {
   "public" ["synchronized"] returnType = Type() methodName = <IDENTIFIER> "(" [paramType = Type() paramName = <IDENTIFIER> 
   ("," paramType = Type() paramName = <IDENTIFIER> )*]")"
-  {
-  //paramType = Type() paramName = <IDENTIFIER> 
-    formals.add(new Absyn.Formal(paramType, paramName.toString()
+  
+  paramType = Type() paramName = <IDENTIFIER>
+  { formals.add(new Absyn.Formal(paramType, paramName.toString()
 					)); } // Create formal with given param name and type  
   "{"
       (LOOKAHEAD(VarDeclaration()) var = VarDeclaration() {locals.add(var); })*
-
-      (LOOKAHEAD(Statement()) stmt = Statement() {stmts.add(stmt); })*
       //(stmt = Statement() { stmts.add(stmt); } )* 
       "return" expr = Expression() ";" 
   "}"
   //Handle Logging
   {
    return (new Absyn.MethodDecl(returnType, sync, methodName.toString(),
-   formals,locals,stmts, expr)); // Create MEthod Delcaration and Send it back up out grammar tree (Hopefully)
+   formals,locals,stmts, expr)); // Create Method Declaration and send it back up out grammar tree (Hopefully)
   }
 
 }
-// VoidDeclaration 	::= 	"public" "void" Identifier "(" ( Type Identifier ( "," Type Identifier )* )? ")\]{" ( VarDeclaration )* ( Statement )* "}"
+// VoidDeclaration 	::= 	"public" "void" Identifier "(" ( Type Identifier ( "," Type Identifier )* )? ")" "{" ( VarDeclaration )* ( Statement )* "}"
 Absyn.VoidDecl VoidDeclaration():
 {
 	Token methodName;
@@ -470,56 +467,23 @@ Absyn.VarDecl FieldDeclaration():
   { return new Absyn.VarDecl(type, name.toString(), null); } /// create field declaration and return it 
 }
 
-Absyn.Stmt Statement() :
-{
-Absyn.Expr expr = null;
-Absyn.Stmt stm1 = null;
-Absyn.Stmt stm2 = null;
-}
-{
-  "if" "(" Expression() ")" Statement() {return new Absyn.IfStmt(expr,stm1,stm2);}
-  | "while" "(" Expression() ")" Statement() {return new Absyn.WhileStmt(expr,stm1);}
-  //|LOOKAHEAD(AssignmentStatement()) stm1 = AssignmentStatement()
-  {return stm1; }
-}
-/*
-Abysn.AssignStmt AssignmentStatement() :
-{
- Abysn.AssignableExpr lhs = null;
- Absyn.Expr rhs = null;
-}
-{
-lhs = Expression() "=" rhs = Expression() ";"
-{return new Absyn.AssignStmt(lhs,rhs) ;}
-}
-*/
+
 Absyn.Expr Expression():
 {
 Absyn.Expr e1;
 Absyn.Expr e2;
 }
 {
-  e1 = LogicalOrExpression() ("," e2 = PrimaryExpression() {e1 = new Absyn.OrExpr(e1,e2);} )*
-  {return e1;}
+  e1 = LogicalOrExpression() (LOOKAHEAD(1) "," e2 = LogicalOrExpression() {e1 = new Absyn.OrExpr(e1,e2);} )* {return e1;}
 }
-/*
-Absyn.AssignStmt AssignableExpression():
-{
-Token name = null;
-}
-{
-  LOOKAHEAD(<IDENTIFIER>) name = <IDENTIFIER>
-  {return name;}
-// Can go to <ID> or to ArrayType
-}
-*/
+
 Absyn.Expr LogicalOrExpression():
 {
 Absyn.Expr e1;
 Absyn.Expr e2;
 }
 {
- e1 = LogicalAndExpression()  (("||") e2 = LogicalAndExpression() {e1 = new Absyn.AndExpr(e1,e2);} )* 
+ e1 = LogicalAndExpression()  (("||") e2 = LogicalAndExpression() {e1 = new Absyn.OrExpr(e1,e2);} )* 
  {return e1;}
 }
 
@@ -529,7 +493,7 @@ Absyn.Expr e1;
 Absyn.Expr e2;
 }
 {
- e1 = EqualityExpression()  (("&&") e2 = EqualityExpression() {e1 = new Absyn.EqualExpr(e1,e2);} )* 
+ e1 = EqualityExpression()  (("&&") e2 = EqualityExpression() {e1 = new Absyn.AndExpr(e1,e2);} )* 
  {return e1;}
 }
 
@@ -539,7 +503,7 @@ Absyn.Expr e1;
 Absyn.Expr e2;
 }
 {
- e1 = GreaterExpression()  (("==") e2 = GreaterExpression() {e1 = new Absyn.GreaterExpr(e1,e2);} )* 
+ e1 = GreaterExpression()  (("==") e2 = GreaterExpression() {e1 = new Absyn.EqualExpr(e1,e2);} )* 
  {return e1;}
 }
 
@@ -549,7 +513,7 @@ Absyn.Expr e1;
 Absyn.Expr e2;
 }
 {
- e1 = LessExpression()  ((">")e2 = LessExpression() {e1 = new Absyn.LesserExpr(e1,e2);} )* 
+ e1 = LessExpression()  ((">")e2 = LessExpression() {e1 = new Absyn.GreaterExpr(e1,e2);} )* 
  {return e1;}
 }
 
@@ -559,7 +523,7 @@ Absyn.Expr e1;
 Absyn.Expr e2;
 }
 {
- e1 = AdditiveExpression()  (("<")e2 = AdditiveExpression() {e1 = new Absyn.AddExpr(e1,e2);} )* 
+ e1 = AdditiveExpression()  (("<")e2 = AdditiveExpression() {e1 = new Absyn.LesserExpr(e1,e2);} )* 
  {return e1;}
 }
 
@@ -569,7 +533,7 @@ Absyn.Expr e1;
 Absyn.Expr e2;
 }
 {
- e1 = SubtractExpression() (("+")e2 = SubtractExpression() {e1 = new Absyn.SubExpr(e1,e2);} )* 
+ e1 = SubtractExpression() (("+")e2 = SubtractExpression() {e1 = new Absyn.AddExpr(e1,e2);} )* 
  {return e1;}
 }
 
@@ -579,7 +543,7 @@ Absyn.Expr e1;
 Absyn.Expr e2;
 }
 {
- e1 = MultiplicitiveExpression() (("-")e2 = MultiplicitiveExpression() {e1 = new Absyn.MulExpr(e1,e2);} )* 
+ e1 = MultiplicitiveExpression() (("-")e2 = MultiplicitiveExpression() {e1 = new Absyn.SubExpr(e1,e2);} )*
  {return e1;}
 }
 
@@ -589,7 +553,7 @@ Absyn.Expr e1;
 Absyn.Expr e2;
 }
 {
- e1 = DivisionExpression() (("*")e2 = DivisionExpression() {e1 = new Absyn.DivExpr(e1,e2);} )* 
+ e1 = DivisionExpression() (("*")e2 = DivisionExpression() {e1 = new Absyn.MulExpr(e1,e2);} )* 
  {return e1;}
 }
 
@@ -599,55 +563,73 @@ Absyn.Expr e1;
 Absyn.Expr e2;
 }
 {
- e1 = NotExpression() (("/")e2 = NotExpression() {e1 = new Absyn.NotExpr(e1);} )* 
+ e1 = ArrayExpression() (("/")e2 = ArrayExpression() {e1 = new Absyn.DivExpr(e1,e2);} )* 
  {return e1;}
-}
+} 
 
-Absyn.Expr NotExpression():
+Absyn.Expr ArrayExpression():
 {
 Absyn.Expr e1;
 Absyn.Expr e2;
 }
 {
- e1 = PrimaryExpression()
+e1 = PrimaryExpression() ["[" e2 = PrimaryExpression() "]" {return new Absyn.ArrayExpr(e1,e2);}]
  {return e1;}
 }
 
 Absyn.Expr PrimaryExpression():
 {
-Absyn.Expr e1;
-Absyn.Expr e2;
+Absyn.Expr e1 = null;
+Absyn.Expr e2 = null;
+Token t = null;
+LinkedList<Absyn.Expr> exprs = new LinkedList<Absyn.Expr>();
+
 }
 {
-     <IDENTIFIER>
-     | <INT>
-     | <STRING>
+     t = <IDENTIFIER> {return new Absyn.IdentifierExpr(t.toString());}
+     | t = <INTEGER_LITERAL> {return new Absyn.IntegerLiteral(Integer.parseInt(t.image));}
+     | t = <STRING> {return new Absyn.IdentifierExpr(t.toString());}
      | "true" {return new Absyn.TrueExpr();}
      | "false" {return new Absyn.FalseExpr();}
      | "this" {return new Absyn.ThisExpr();}
      | "null" {return new Absyn.NullExpr();}
-     | "("Expression() ")"
+     | "(" Expression() ")"
+     | "-" t = <INTEGER_LITERAL> {return new Absyn.NegExpr(new Absyn.IntegerLiteral(Integer.parseInt(t.image)));}
 }
 
 Absyn.Type Type() :
 {
-Absyn.Type t1;
+Absyn.Type t1 = null;
 Token name = null;
 }
 {
   "boolean" {return new Absyn.BooleanType();}
  |"int" {return new Absyn.IntegerType();} 
- |<IDENTIFIER> {return new Absyn.IdentifierType(name.toString());}
+ | name = <IDENTIFIER> {return new Absyn.IdentifierType(name.toString());}
 }
-/*
+
+
 Absyn.Stmt Statement() :
 {
-Absyn.Expr expr = null;
+LinkedList<Absyn.Stmt> stmts = new LinkedList<Absyn.Stmt>();
+LinkedList<Absyn.Expr> exprs = new LinkedList<Absyn.Expr>();
+Absyn.Expr e1 = null;
+Absyn.Expr e2 = null;
 Absyn.Stmt stm1 = null;
 Absyn.Stmt stm2 = null;
+Token name = null;
 }
 {
-  "if" "(" Expression() ")" Statement() {return new Absyn.IfStmt(expr,stm1,stm2);}
-  | "while" "(" Expression() ")" Statement() {return new Absyn.WhileStmt(expr,stm1);}
+  e1 = Expression() "=" e2 = Expression() ";" {return new Absyn.AssignStmt(e1,e2);}
+ | "{" (stm1 = Statement() {stmts.add(stm1);} )* "}" {return new Absyn.BlockStmt(stmts);}
+ | "Xinu" "." name = <IDENTIFIER> "(" [ e1 = Expression() {exprs.add(e1);} ("," e2 = Expression() {exprs.add(e2);} )* ] ")" ";"
+ {return new Absyn.XinuCallStmt(name.toString(),exprs);}
+ | "if" "(" e1 = Expression() ")" stm1 = Statement() [LOOKAHEAD(1) "else" stm2 = Statement()] {return new Absyn.IfStmt(e1,stm1,stm2);}
+ | "while" "(" e1 = Expression() ")" stm1 = Statement() {return new Absyn.WhileStmt(e1,stm1);}
 }
-*/
+
+// new type x2
+// arraytype
+// unary expr
+// xinu expr
+// expr. id x2
