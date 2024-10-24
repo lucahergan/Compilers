@@ -153,6 +153,7 @@ TOKEN :
 	// reserved words
 
 	// xinu shit
+  | <XINU: "Xinu" >
 }
 
 /***********************/
@@ -473,7 +474,7 @@ Absyn.Expr e1;
 Absyn.Expr e2;
 }
 {
-  e1 = LogicalOrExpression() ("," e2 = LogicalOrExpression() {e1 = new Absyn.OrExpr(e1,e2);} )* {return e1;}
+  e1 = LogicalOrExpression() (LOOKAHEAD(1) "," e2 = LogicalOrExpression() {e1 = new Absyn.OrExpr(e1,e2);} )* {return e1;}
 }
 
 Absyn.Expr LogicalOrExpression():
@@ -562,7 +563,17 @@ Absyn.Expr e1;
 Absyn.Expr e2;
 }
 {
- e1 = PrimaryExpression() (("/")e2 = PrimaryExpression() {e1 = new Absyn.DivExpr(e1,e2);} )* 
+ e1 = ArrayExpression() (("/")e2 = ArrayExpression() {e1 = new Absyn.DivExpr(e1,e2);} )* 
+ {return e1;}
+} 
+
+Absyn.Expr ArrayExpression():
+{
+Absyn.Expr e1;
+Absyn.Expr e2;
+}
+{
+e1 = PrimaryExpression() ("[" e2 = PrimaryExpression() "]" {return new Absyn.ArrayExpr(e1,e2);})* 
  {return e1;}
 }
 
@@ -571,16 +582,19 @@ Absyn.Expr PrimaryExpression():
 Absyn.Expr e1 = null;
 Absyn.Expr e2 = null;
 Token t = null;
+LinkedList<Absyn.Expr> exprs = new LinkedList<Absyn.Expr>();
+
 }
 {
      t = <IDENTIFIER> {return new Absyn.IdentifierExpr(t.toString());}
-     | t = <INTEGER_LITERAL> {return new Absyn.IdentifierExpr(t.toString());}
+     | t = <INTEGER_LITERAL> {return new Absyn.IntegerLiteral(Integer.parseInt(t.image));}
      | t = <STRING> {return new Absyn.IdentifierExpr(t.toString());}
      | "true" {return new Absyn.TrueExpr();}
      | "false" {return new Absyn.FalseExpr();}
      | "this" {return new Absyn.ThisExpr();}
      | "null" {return new Absyn.NullExpr();}
      | "(" Expression() ")"
+     | "-" t = <INTEGER_LITERAL> {return new Absyn.NegExpr(new Absyn.IntegerLiteral(Integer.parseInt(t.image)));}
 }
 
 Absyn.Type Type() :
@@ -597,11 +611,25 @@ Token name = null;
 
 Absyn.Stmt Statement() :
 {
-Absyn.Expr expr1 = null;
-Absyn.Expr expr2 = null;
+LinkedList<Absyn.Stmt> stmts = new LinkedList<Absyn.Stmt>();
+LinkedList<Absyn.Expr> exprs = new LinkedList<Absyn.Expr>();
+Absyn.Expr e1 = null;
+Absyn.Expr e2 = null;
 Absyn.Stmt stm1 = null;
 Absyn.Stmt stm2 = null;
+Token name = null;
 }
 {
-  expr1 = Expression() "=" expr2 = Expression() ";" {return new Absyn.AssignStmt(expr1,expr2);}
+  e1 = Expression() "=" e2 = Expression() ";" {return new Absyn.AssignStmt(e1,e2);}
+ | "{" (stm1 = Statement() {stmts.add(stm1);} )* "}" {return new Absyn.BlockStmt(stmts);}
+ | "Xinu" "." name = <IDENTIFIER> "(" [ e1 = Expression() {exprs.add(e1);} ("," e2 = Expression() {exprs.add(e2);} )* ] ")" ";"
+ {return new Absyn.XinuCallStmt(name.toString(),exprs);}
+ | "if" "(" e1 = Expression() ")" stm1 = Statement() [LOOKAHEAD(1) "else" stm2 = Statement()] {return new Absyn.IfStmt(e1,stm1,stm2);}
+ | "while" "(" e1 = Expression() ")" stm1 = Statement() {return new Absyn.WhileStmt(e1,stm1);}
 }
+
+// new type x2
+// arraytype
+// unary expr
+// xinu expr
+// expr. id x2
